@@ -1,0 +1,118 @@
+{
+  "login": {
+    "title": "勤怠申請システム",
+    "employee_number": "社員番号",
+    "password": "パスワード",
+    "submit": "ログイン",
+    "error": "社員番号またはパスワードが正しくありません"
+  },
+  "nav": {
+    "new_request": "新規申請",
+    "logout": "ログアウト",
+    "profile": "プロフィール"
+  },
+  "dashboard": {
+    "title": "申請一覧",
+    "refresh": "更新",
+    "no_requests": "申請はありません",
+    "columns": {
+      "date": "日付",
+      "type": "申請種別",
+      "reason": "理由",
+      "submitted": "申請日",
+      "status": "ステータス"
+    }
+  },
+  "request_type": {
+    "late": "遅刻",
+    "early_departure": "早退",
+    "absence": "欠勤",
+    "other_request": "その他"
+  },
+  "status": {
+    "pending": "承認待ち",
+    "approved": "承認済み",
+    "rejected": "却下"
+  },
+  "form": {
+    "title": "勤怠申請",
+    "request_type": "申請種別",
+    "date": "日付",
+    "start_date": "開始日",
+    "end_date": "終了日",
+    "time_from": "開始時間",
+    "time_to": "終了時間",
+    "reason": "理由",
+    "reason_detail": "詳細",
+    "train_line": "路線",
+    "leave_type": "休暇種別",
+    "admin_message": "管理者へのメッセージ（任意）",
+    "attach_file": "ファイル添付（PDF/XLSX、3MBまで）",
+    "next": "確認へ",
+    "reasons": {
+      "train_delay": "電車遅延",
+      "oversleeping": "寝過ごし",
+      "child_dropoff": "保育園・学校の送り",
+      "illness": "体調不良",
+      "personal": "私用",
+      "work_appointment": "業務上のアポイント",
+      "other_appointment": "その他アポイント",
+      "direct_home": "客先直帰",
+      "other": "その他"
+    },
+    "leave_types": {
+      "paid": "有給休暇",
+      "unpaid": "欠勤",
+      "substitute": "振替休日",
+      "other": "その他"
+    }
+  },
+  "confirm": {
+    "title": "申請内容確認",
+    "summary": "申請内容",
+    "message_preview": "通知メッセージ",
+    "recipients": "送信先（クリックして確認）",
+    "back": "修正する",
+    "send": "送信する"
+  },
+  "admin": {
+    "title": "申請管理",
+    "filter_name": "名前で検索",
+    "filter_type": "申請種別",
+    "filter_from": "開始日",
+    "filter_to": "終了日",
+    "filter_status": "ステータス",
+    "all": "すべて",
+    "columns": {
+      "name": "氏名",
+      "employee_number": "社員番号",
+      "date": "日付",
+      "type": "申請種別",
+      "reason": "理由",
+      "leave_type": "休暇種別",
+      "submitted": "申請日",
+      "status": "ステータス"
+    }
+  },
+  "detail_panel": {
+    "title": "申請詳細",
+    "approve": "承認",
+    "reject": "却下",
+    "attachment": "添付ファイル",
+    "download": "ダウンロード",
+    "admin_message": "管理者へのメッセージ"
+  },
+  "profile": {
+    "title": "プロフィール",
+    "employee_number": "社員番号",
+    "role": "役割",
+    "train_lines": "登録路線",
+    "roles": {
+      "applicant": "一般社員",
+      "admin": "管理者"
+    }
+  },
+  "toast": {
+    "request_sent": "申請を送信しました。承認待ちです。"
+  }
+}

@@ -1,0 +1,118 @@
+{
+  "login": {
+    "title": "Attendance Request System",
+    "employee_number": "Employee Number",
+    "password": "Password",
+    "submit": "Login",
+    "error": "Invalid employee number or password"
+  },
+  "nav": {
+    "new_request": "New Request",
+    "logout": "Logout",
+    "profile": "Profile"
+  },
+  "dashboard": {
+    "title": "My Requests",
+    "refresh": "Refresh",
+    "no_requests": "No requests yet",
+    "columns": {
+      "date": "Date",
+      "type": "Type",
+      "reason": "Reason",
+      "submitted": "Submitted",
+      "status": "Status"
+    }
+  },
+  "request_type": {
+    "late": "Late Arrival",
+    "early_departure": "Early Departure",
+    "absence": "Absence",
+    "other_request": "Other Request"
+  },
+  "status": {
+    "pending": "Pending",
+    "approved": "Approved",
+    "rejected": "Rejected"
+  },
+  "form": {
+    "title": "Attendance Request",
+    "request_type": "Request Type",
+    "date": "Date",
+    "start_date": "Start Date",
+    "end_date": "End Date",
+    "time_from": "From",
+    "time_to": "To",
+    "reason": "Reason",
+    "reason_detail": "Details",
+    "train_line": "Train Line",
+    "leave_type": "Leave Type",
+    "admin_message": "Message to Admin (optional)",
+    "attach_file": "Attach File (PDF/XLSX, max 3MB)",
+    "next": "Review & Confirm",
+    "reasons": {
+      "train_delay": "Train Delay",
+      "oversleeping": "Oversleeping",
+      "child_dropoff": "Dropping child at school/daycare",
+      "illness": "Illness",
+      "personal": "Personal Reasons",
+      "work_appointment": "Work-related appointment",
+      "other_appointment": "Other appointment",
+      "direct_home": "Going home directly from client",
+      "other": "Other"
+    },
+    "leave_types": {
+      "paid": "Paid Leave",
+      "unpaid": "Unpaid Leave",
+      "substitute": "Substitute Holiday",
+      "other": "Other"
+    }
+  },
+  "confirm": {
+    "title": "Confirm Request",
+    "summary": "Request Summary",
+    "message_preview": "Notification Message",
+    "recipients": "Recipients (click to view)",
+    "back": "Back to Edit",
+    "send": "Send"
+  },
+  "admin": {
+    "title": "Request Management",
+    "filter_name": "Search by name",
+    "filter_type": "Request Type",
+    "filter_from": "From Date",
+    "filter_to": "To Date",
+    "filter_status": "Status",
+    "all": "All",
+    "columns": {
+      "name": "Name",
+      "employee_number": "Emp. No.",
+      "date": "Date",
+      "type": "Type",
+      "reason": "Reason",
+      "leave_type": "Leave Type",
+      "submitted": "Submitted",
+      "status": "Status"
+    }
+  },
+  "detail_panel": {
+    "title": "Request Detail",
+    "approve": "Approve",
+    "reject": "Reject",
+    "attachment": "Attachment",
+    "download": "Download",
+    "admin_message": "Message from employee"
+  },
+  "profile": {
+    "title": "Profile",
+    "employee_number": "Employee Number",
+    "role": "Role",
+    "train_lines": "Registered Train Lines",
+    "roles": {
+      "applicant": "Employee",
+      "admin": "Admin"
+    }
+  },
+  "toast": {
+    "request_sent": "Request sent. Pending approval."
+  }
+}
