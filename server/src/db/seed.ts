@@ -8,14 +8,14 @@ async function seed() {
     INSERT INTO users (employee_number, name_ja, name_en, email, password_hash, role)
     VALUES ($1, $2, $3, $4, $5, 'admin')
     ON CONFLICT (employee_number) DO NOTHING
-  `, ['ADMIN-001', '管理者', 'Admin User', 'admin@company.com', passwordHash]);
+  `, ['ADMIN-001', '管理者', 'Admin User', 'gowthamkanithi78444@gmail.com', passwordHash]);
 
   const empHash = await bcrypt.hash('Emp1234!', 12);
   await pool.query(`
     INSERT INTO users (employee_number, name_ja, name_en, email, password_hash, role)
     VALUES ($1, $2, $3, $4, $5, 'applicant')
     ON CONFLICT (employee_number) DO NOTHING
-  `, ['EMP-001', 'テスト太郎', 'Taro Test', 'emp@company.com', empHash]);
+  `, ['EMP-001', 'テスト太郎', 'Taro Test', 'kanithigowtham3@gmail.com', empHash]);
 
   const { rows: [admin] } = await pool.query(`SELECT id FROM users WHERE employee_number = 'ADMIN-001'`);
   const { rows: [emp] } = await pool.query(`SELECT id FROM users WHERE employee_number = 'EMP-001'`);

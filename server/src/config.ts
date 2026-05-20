@@ -11,7 +11,7 @@ function required(key: string): string {
 export const config = {
   port: parseInt(process.env.PORT ?? '4000', 10),
   databaseUrl: required('DATABASE_URL'),
-  databaseTestUrl: required('DATABASE_TEST_URL'),
+  databaseTestUrl: process.env.DATABASE_TEST_URL ?? '',
   jwtSecret: required('JWT_SECRET'),
   jwtRefreshSecret: required('JWT_REFRESH_SECRET'),
   clientUrl: process.env.CLIENT_URL ?? 'http://localhost:5173',
