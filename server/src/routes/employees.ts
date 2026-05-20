@@ -55,7 +55,11 @@ employeesRouter.get('/:id', async (req: AuthRequest, res: Response, next) => {
 employeesRouter.patch('/:id', async (req: AuthRequest, res: Response, next) => {
   try {
     const { name_ja, name_en, email, role, work_start, work_end } = req.body;
-    await updateEmployee(req.params.id, { name_ja, name_en, email, role, work_start, work_end });
+    if (role !== undefined && role !== 'admin' && role !== 'applicant') {
+      throw new AppError(400, 'Invalid role');
+    }
+    const updated = await updateEmployee(req.params.id, { name_ja, name_en, email, role, work_start, work_end });
+    if (!updated) throw new AppError(404, 'Employee not found');
     res.json({ ok: true });
   } catch (err) { next(err); }
 });
@@ -64,6 +68,9 @@ employeesRouter.post('/:id/managers', async (req: AuthRequest, res: Response, ne
   try {
     const { managerId } = req.body;
     if (!managerId) throw new AppError(400, 'managerId is required');
+    if (managerId === req.params.id) {
+      throw new AppError(400, 'Employee cannot be assigned as their own manager');
+    }
     const { rows } = await pool.query(`SELECT id FROM users WHERE id = $1`, [managerId]);
     if (!rows[0]) throw new AppError(404, 'Manager not found');
     await assignManager(req.params.id, managerId);

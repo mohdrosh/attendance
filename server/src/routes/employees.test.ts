@@ -69,6 +69,21 @@ describe('POST /api/admin/employees', () => {
       .send({ employee_number: 'EMP-001', name_ja: '別', name_en: 'Other', email: 'other@test.com', password: 'Pass1234!', role: 'applicant' });
     expect(res.status).toBe(409);
   });
+
+  it('returns 409 when email already exists', async () => {
+    // Create a first employee with a unique email
+    await request(app)
+      .post('/api/admin/employees')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ employee_number: 'EMP-010', name_ja: '最初', name_en: 'First', email: 'dup@test.com', password: 'Pass1234!', role: 'applicant' });
+
+    // Attempt to create a second employee with the SAME email but different employee_number
+    const res = await request(app)
+      .post('/api/admin/employees')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ employee_number: 'EMP-011', name_ja: '二番目', name_en: 'Second', email: 'dup@test.com', password: 'Pass1234!', role: 'applicant' });
+    expect(res.status).toBe(409);
+  });
 });
 
 describe('GET /api/admin/employees', () => {
@@ -112,6 +127,22 @@ describe('PATCH /api/admin/employees/:id', () => {
       .get(`/api/admin/employees/${employeeId}`)
       .set('Authorization', `Bearer ${adminToken}`);
     expect(getRes.body.name_en).toBe('Updated Name');
+  });
+
+  it('returns 400 when role value is invalid', async () => {
+    const res = await request(app)
+      .patch(`/api/admin/employees/${employeeId}`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ role: 'superuser' });
+    expect(res.status).toBe(400);
+  });
+
+  it('returns 404 when patching a non-existent employee', async () => {
+    const res = await request(app)
+      .patch('/api/admin/employees/00000000-0000-0000-0000-000000000000')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ name_en: 'Ghost' });
+    expect(res.status).toBe(404);
   });
 });
 

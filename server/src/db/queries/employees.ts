@@ -43,32 +43,42 @@ export async function getEmployeeById(id: string) {
     `SELECT u.id, u.employee_number, u.name_ja, u.name_en, u.email, u.role,
             u.work_start, u.work_end,
             COALESCE(
-              json_agg(DISTINCT jsonb_build_object(
-                'id', t.id, 'line_name_ja', t.line_name_ja, 'line_name_en', t.line_name_en
-              )) FILTER (WHERE t.id IS NOT NULL), '[]'
+              (
+                SELECT json_agg(json_build_object(
+                  'id', t2.id, 'line_name_ja', t2.line_name_ja, 'line_name_en', t2.line_name_en
+                ))
+                FROM train_lines t2
+                WHERE t2.employee_id = u.id
+              ),
+              '[]'
             ) AS train_lines,
             COALESCE(
-              json_agg(DISTINCT jsonb_build_object(
-                'id', m.id, 'name_ja', m.name_ja, 'name_en', m.name_en, 'email', m.email
-              )) FILTER (WHERE m.id IS NOT NULL), '[]'
+              (
+                SELECT json_agg(json_build_object(
+                  'id', m2.id, 'name_ja', m2.name_ja, 'name_en', m2.name_en, 'email', m2.email
+                ))
+                FROM employee_managers em2
+                JOIN users m2 ON m2.id = em2.manager_id
+                WHERE em2.employee_id = u.id
+              ),
+              '[]'
             ) AS managers
      FROM users u
-     LEFT JOIN train_lines t ON t.employee_id = u.id
-     LEFT JOIN employee_managers em ON em.employee_id = u.id
-     LEFT JOIN users m ON m.id = em.manager_id
-     WHERE u.id = $1
-     GROUP BY u.id`,
+     WHERE u.id = $1`,
     [id]
   );
   return rows[0] as Record<string, unknown> | undefined;
 }
 
-export async function updateEmployee(id: string, data: UpdateEmployeeData): Promise<void> {
-  const entries = Object.entries(data).filter(([, v]) => v !== undefined);
-  if (entries.length === 0) return;
+const ALLOWED_COLUMNS = new Set(['name_ja', 'name_en', 'email', 'role', 'work_start', 'work_end']);
+
+export async function updateEmployee(id: string, data: UpdateEmployeeData): Promise<boolean> {
+  const entries = Object.entries(data).filter(([k, v]) => ALLOWED_COLUMNS.has(k) && v !== undefined);
+  if (entries.length === 0) return false;
   const setClause = entries.map(([k], i) => `${k} = $${i + 2}`).join(', ');
   const values = entries.map(([, v]) => v);
-  await pool.query(`UPDATE users SET ${setClause} WHERE id = $1`, [id, ...values]);
+  const result = await pool.query(`UPDATE users SET ${setClause} WHERE id = $1`, [id, ...values]);
+  return (result.rowCount ?? 0) > 0;
 }
 
 export async function assignManager(employeeId: string, managerId: string): Promise<void> {
