@@ -1,23 +1,32 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { generateMessage } from '@attendance/shared';
 import { Navbar } from '../components/Navbar';
+import { Footer } from '../components/Footer';
 import { useToast } from '../context/ToastContext';
 import { apiFetch } from '../api/client';
-import { Manager } from '@attendance/shared';
+import type { Manager } from '@attendance/shared';
 
 export function ConfirmPage() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
-  const { showToast } = useToast();
+  const { showToast: _showToast } = useToast();
   const { form, user } = location.state ?? {};
 
-  const [managersOpen, setManagersOpen] = useState(false);
   const [managers, setManagers] = useState<Manager[]>([]);
-  const [loadingManagers, setLoadingManagers] = useState(false);
+  const [managerId, setManagerId] = useState('');
   const [sending, setSending] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [submittedManagerName, setSubmittedManagerName] = useState('');
+
+  useEffect(() => {
+    apiFetch('/api/users/me/managers')
+      .then(res => res.ok ? res.json() : [])
+      .then((data: Manager[]) => setManagers(data))
+      .catch(() => {});
+  }, []);
 
   if (!form || !user) {
     navigate('/request/new');
@@ -42,19 +51,6 @@ export function ConfirmPage() {
     inputLanguage: form.inputLanguage,
   });
 
-  async function handleExpandManagers() {
-    if (managersOpen) { setManagersOpen(false); return; }
-    setManagersOpen(true);
-    if (managers.length > 0) return;
-    setLoadingManagers(true);
-    try {
-      const res = await apiFetch('/api/users/me/managers');
-      if (res.ok) setManagers(await res.json());
-    } finally {
-      setLoadingManagers(false);
-    }
-  }
-
   async function handleSend() {
     setSending(true);
     try {
@@ -71,82 +67,106 @@ export function ConfirmPage() {
       if (form.adminMessage) formData.append('adminMessage', form.adminMessage);
       formData.append('inputLanguage', form.inputLanguage);
       if (form.file) formData.append('file', form.file);
+      formData.append('managerId', managerId);
 
       const res = await apiFetch('/api/requests', { method: 'POST', body: formData });
       if (!res.ok) throw new Error('Failed to submit');
 
-      const managerNames = managers.length > 0
-        ? managers.map((m: Manager) => i18n.language === 'ja' ? m.name_ja : m.name_en).join(', ')
+      const selectedManager = managers.find(m => m.id === managerId);
+      const displayName = selectedManager
+        ? (i18n.language === 'ja' ? selectedManager.name_ja : selectedManager.name_en)
         : '';
-
-      showToast(managerNames
-        ? (i18n.language === 'ja'
-          ? `申請を ${managerNames} に送信しました。承認待ちです。`
-          : `Request sent to ${managerNames} and is pending approval.`)
-        : t('toast.request_sent')
-      );
-      navigate('/dashboard');
+      setSubmittedManagerName(displayName);
+      setSubmitted(true);
     } finally {
       setSending(false);
     }
   }
 
-  return (
-    <div>
-      <Navbar />
-      <div style={{ padding: '24px', maxWidth: '680px', margin: '0 auto' }}>
-        <h1>{t('confirm.title')}</h1>
+  if (submitted) {
+    return (
+      <div style={{ minHeight: '100vh', background: '#f8fafc', display: 'flex', flexDirection: 'column' }}>
+        <Navbar />
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 20px', textAlign: 'center' }}>
+          <div style={{ fontSize: '3em', color: '#16a34a', marginBottom: '16px' }}>✓</div>
+          <h1 style={{ fontSize: '1.6em', fontWeight: 700, color: '#16a34a', marginBottom: '16px' }}>{t('confirm.submitted_title')}</h1>
+          <p style={{ fontSize: '1em', color: '#374151', marginBottom: '32px', maxWidth: '480px' }}>{t('confirm.submitted_message', { name: submittedManagerName })}</p>
+          <button
+            onClick={() => navigate('/dashboard')}
+            style={{ padding: '11px 28px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, fontSize: '0.95em' }}
+          >
+            {t('confirm.back_to_dashboard')}
+          </button>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
-        <section style={{ marginBottom: '24px', padding: '16px', background: '#f9f9f9', borderRadius: '8px' }}>
-          <h2 style={{ marginBottom: '12px' }}>{t('confirm.summary')}</h2>
-          <dl style={{ display: 'grid', gridTemplateColumns: '140px 1fr', rowGap: '8px' }}>
-            <dt style={{ color: '#888' }}>{t('form.request_type')}</dt><dd>{t(`request_type.${form.requestType}`)}</dd>
-            <dt style={{ color: '#888' }}>{t('form.date')}</dt><dd>{form.startDate}{form.endDate ? ` – ${form.endDate}` : ''}</dd>
-            <dt style={{ color: '#888' }}>{t('form.reason')}</dt><dd>{t(`form.reasons.${form.reasonCategory}`)}</dd>
-            {form.reasonDetail && <><dt style={{ color: '#888' }}>{t('form.reason_detail')}</dt><dd>{form.reasonDetail}</dd></>}
-            {form.leaveType && <><dt style={{ color: '#888' }}>{t('form.leave_type')}</dt><dd>{t(`form.leave_types.${form.leaveType}`)}</dd></>}
-            {form.adminMessage && <><dt style={{ color: '#888' }}>{t('detail_panel.admin_message')}</dt><dd>{form.adminMessage}</dd></>}
-            {form.file && <><dt style={{ color: '#888' }}>File</dt><dd>📎 {form.file.name}</dd></>}
+  return (
+    <div style={{ minHeight: '100vh', background: '#f8fafc', display: 'flex', flexDirection: 'column' }}>
+      <Navbar />
+      <div style={{ flex: 1, padding: '28px 20px', maxWidth: '680px', margin: '0 auto', width: '100%' }}>
+        <h1 style={{ fontSize: '1.4em', marginBottom: '24px', color: '#111' }}>{t('confirm.title')}</h1>
+
+        <section style={{ marginBottom: '16px', padding: '20px', background: 'white', borderRadius: '12px', boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}>
+          <h2 style={{ fontSize: '0.95em', fontWeight: 700, color: '#374151', marginBottom: '14px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('confirm.summary')}</h2>
+          <dl style={{ display: 'grid', gridTemplateColumns: '140px 1fr', rowGap: '10px', fontSize: '0.9em' }}>
+            <dt style={{ color: '#9ca3af', fontWeight: 600 }}>{t('form.request_type')}</dt><dd style={{ color: '#111' }}>{t(`request_type.${form.requestType}`)}</dd>
+            <dt style={{ color: '#9ca3af', fontWeight: 600 }}>{t('form.date')}</dt><dd style={{ color: '#111' }}>{form.startDate}{form.endDate ? ` – ${form.endDate}` : ''}</dd>
+            {form.reasonCategory && <><dt style={{ color: '#9ca3af', fontWeight: 600 }}>{t('form.reason')}</dt><dd style={{ color: '#111' }}>{t(`form.reasons.${form.reasonCategory}`)}</dd></>}
+            {form.reasonDetail && <><dt style={{ color: '#9ca3af', fontWeight: 600 }}>{t('form.reason_detail')}</dt><dd style={{ color: '#111' }}>{form.reasonDetail}</dd></>}
+            {form.leaveType && <><dt style={{ color: '#9ca3af', fontWeight: 600 }}>{t('form.leave_type')}</dt><dd style={{ color: '#111' }}>{t(`form.leave_types.${form.leaveType}`)}</dd></>}
+            {form.adminMessage && <><dt style={{ color: '#9ca3af', fontWeight: 600 }}>{t('detail_panel.admin_message')}</dt><dd style={{ color: '#111' }}>{form.adminMessage}</dd></>}
+            {form.file && <><dt style={{ color: '#9ca3af', fontWeight: 600 }}>File</dt><dd style={{ color: '#111' }}>📎 {form.file.name}</dd></>}
           </dl>
         </section>
 
-        <section style={{ marginBottom: '24px', padding: '16px', background: '#f9f9f9', borderRadius: '8px' }}>
-          <h2 style={{ marginBottom: '12px' }}>{t('confirm.message_preview')}</h2>
+        <section style={{ marginBottom: '16px', padding: '20px', background: 'white', borderRadius: '12px', boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}>
+          <h2 style={{ fontSize: '0.95em', fontWeight: 700, color: '#374151', marginBottom: '14px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('confirm.message_preview')}</h2>
           {english && (
             <div style={{ marginBottom: '16px' }}>
-              <strong>[English]</strong>
-              <pre style={{ whiteSpace: 'pre-wrap', fontFamily: 'inherit', fontSize: '0.9em', marginTop: '8px' }}>{english}</pre>
+              <div style={{ fontSize: '0.75em', fontWeight: 700, color: '#9ca3af', marginBottom: '6px' }}>[English]</div>
+              <pre style={{ whiteSpace: 'pre-wrap', fontFamily: 'inherit', fontSize: '0.88em', color: '#374151', background: '#f8fafc', padding: '12px', borderRadius: '8px', margin: 0 }}>{english}</pre>
             </div>
           )}
           <div>
-            {english && <strong>[日本語]</strong>}
-            <pre style={{ whiteSpace: 'pre-wrap', fontFamily: 'inherit', fontSize: '0.9em', marginTop: english ? '8px' : 0 }}>{japanese}</pre>
+            {english && <div style={{ fontSize: '0.75em', fontWeight: 700, color: '#9ca3af', marginBottom: '6px' }}>[日本語]</div>}
+            <pre style={{ whiteSpace: 'pre-wrap', fontFamily: 'inherit', fontSize: '0.88em', color: '#374151', background: '#f8fafc', padding: '12px', borderRadius: '8px', margin: 0 }}>{japanese}</pre>
           </div>
         </section>
 
-        <section style={{ marginBottom: '24px' }}>
-          <button onClick={handleExpandManagers} style={{ cursor: 'pointer', background: 'none', border: '1px solid #ddd', borderRadius: '4px', padding: '8px 12px', width: '100%', textAlign: 'left' }}>
-            {t('confirm.recipients')} {managersOpen ? '▲' : '▼'}
-          </button>
-          {managersOpen && (
-            <div style={{ padding: '12px', border: '1px solid #ddd', borderTop: 'none', borderRadius: '0 0 4px 4px' }}>
-              {loadingManagers ? '...' : managers.length === 0
-                ? <span style={{ color: '#888' }}>No managers assigned</span>
-                : managers.map((m: Manager) => <div key={m.id}>{m.name_ja} / {m.name_en}</div>)
-              }
-            </div>
-          )}
+        <section style={{ marginBottom: '24px', padding: '20px', background: 'white', borderRadius: '12px', boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}>
+          <label style={{ display: 'block', fontSize: '0.85em', fontWeight: 600, color: '#374151', marginBottom: '8px' }}>{t('confirm.manager')} <span style={{ color: '#ef4444' }}>*</span></label>
+          <select
+            value={managerId}
+            onChange={e => setManagerId(e.target.value)}
+            style={{ width: '100%', padding: '9px 12px', fontSize: '0.9em', border: '1px solid #d1d5db', borderRadius: '8px', background: 'white', color: managerId ? '#111' : '#9ca3af', cursor: 'pointer' }}
+          >
+            <option value="" disabled>{t('confirm.select_manager')}</option>
+            {managers.map((m: Manager) => (
+              <option key={m.id} value={m.id}>{m.name_ja} / {m.name_en}</option>
+            ))}
+          </select>
         </section>
 
         <div style={{ display: 'flex', gap: '12px' }}>
-          <button onClick={() => navigate('/request/new', { state: { form } })} style={{ padding: '10px 24px', cursor: 'pointer', border: '1px solid #ddd', borderRadius: '4px', background: 'white' }}>
+          <button
+            onClick={() => navigate('/request/new', { state: { form } })}
+            style={{ padding: '11px 24px', cursor: 'pointer', border: '1px solid #d1d5db', borderRadius: '8px', background: 'white', fontSize: '0.95em', color: '#374151' }}
+          >
             {t('confirm.back')}
           </button>
-          <button onClick={handleSend} disabled={sending} style={{ padding: '10px 24px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-            {sending ? '...' : t('confirm.send')}
+          <button
+            onClick={handleSend}
+            disabled={sending || managerId === ''}
+            style={{ flex: 1, padding: '11px', background: managerId === '' ? '#93c5fd' : '#3b82f6', color: 'white', border: 'none', borderRadius: '8px', cursor: managerId === '' ? 'not-allowed' : 'pointer', fontWeight: 600, fontSize: '0.95em' }}
+          >
+            {sending ? '…' : t('confirm.send')}
           </button>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }
