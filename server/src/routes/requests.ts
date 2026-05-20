@@ -97,7 +97,7 @@ requestRouter.post('/', upload.single('file'), async (req: AuthRequest, res: Res
         to: [selectedManager.email],
         subject: `${subjects[requestType]}${user.name_ja} ${startDate}`,
         body,
-      });
+      }).catch(err => console.error('[email] manager notification failed:', err?.message));
     }
 
     res.status(201).json({ id: requestId });

@@ -2,12 +2,26 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Status
+---
 
-**Design approved. Ready to begin coding. No code exists yet.**
+## Current Status — as of 2026-05-20
 
-- Full design spec: [`docs/superpowers/specs/2026-05-19-attendance-system-design.md`](docs/superpowers/specs/2026-05-19-attendance-system-design.md) — authoritative source for schema, API routes, component list, and business logic.
-- Implementation plans (in order): [`plan-1-setup-db-shared.md`](docs/superpowers/plans/2026-05-19-plan-1-setup-db-shared.md) → [`plan-2-backend.md`](docs/superpowers/plans/2026-05-19-plan-2-backend.md) → [`plan-3-frontend.md`](docs/superpowers/plans/2026-05-19-plan-3-frontend.md)
+**MVP is fully implemented and running.** All three implementation plans have been executed. The app is functional end-to-end: login, request submission, admin approval/rejection, bilingual email, file attachments. UI has been iterated on significantly post-MVP.
+
+### What is done
+- Full monorepo scaffold (npm workspaces: `shared/`, `server/`, `client/`)
+- PostgreSQL schema, migrations, seed data
+- Complete backend API (auth, requests, admin, attachments, email)
+- Complete React frontend with all pages and components
+- Bilingual UI (Japanese default, English toggle) — i18next
+- All tests passing: 13 shared + 20 backend + 3 frontend
+- UI/UX iteration: hamburger nav, dropdowns, dashboards, footer, status badges, filters
+
+### Known working credentials (seeded)
+| Role | Employee No. | Password |
+|---|---|---|
+| Admin | `ADMIN-001` | `Admin1234!` |
+| Employee | `EMP-001` | `Emp1234!` |
 
 ---
 
@@ -16,15 +30,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Development
 ```bash
 npm run dev                        # Start both server (port 4000) and client (port 5173) concurrently
-npm run dev -w server              # Server only
-npm run dev -w client              # Client only
+npm run dev -w server              # Server only (uses ts-node-dev)
+npm run dev -w client              # Client only (Vite HMR)
 ```
+
+> **macOS note:** PostgreSQL must be running (Postgres.app). If `psql` is not in PATH, prepend:
+> `PATH="/Applications/Postgres.app/Contents/Versions/18/bin:$PATH"`
 
 ### Database
 ```bash
 cd server && npm run migrate       # Run SQL migrations on dev DB
 NODE_ENV=test npm run migrate      # Run SQL migrations on test DB (run once before first test run)
-cd server && npm run seed          # Seed dummy admin (ADMIN-001 / Admin1234!)
+cd server && npm run seed          # Seed dummy admin + employee with manager assignment
 ```
 
 ### Testing
@@ -40,7 +57,7 @@ cd shared && npm test                                              # Shared mess
 ### Build
 ```bash
 npm run build                      # Build all packages (shared → server → client)
-cd shared && npm run build         # Build shared package only (needed before server/client can import it)
+cd shared && npm run build         # Build shared package only
 ```
 
 ---
@@ -55,9 +72,9 @@ Foreign employees at a Japanese company submit attendance requests (late arrival
 
 | Layer | Choice |
 |---|---|
-| Frontend | React + CSS, Vite, react-i18next (default `ja`) |
+| Frontend | React 19 + inline CSS, Vite 8, react-i18next (default `ja`) |
 | Backend | Node.js + Express (REST API) |
-| Database | PostgreSQL |
+| Database | PostgreSQL 18 |
 | Auth | JWT — 15-min access token (memory) + 8-hr refresh token (httpOnly cookie) |
 | Email | Nodemailer via `EmailService` interface (swappable) |
 | Repo structure | Monorepo — `client/`, `server/`, `shared/` via npm workspaces |
@@ -67,102 +84,237 @@ Foreign employees at a Japanese company submit attendance requests (late arrival
 
 ---
 
-## Project Structure (to be created)
+## Project Structure (actual, as built)
 
 ```
 attendance-system/
-├── client/                   # React app (Vite)
+├── client/                   # React app (Vite 8)
+│   ├── vite.config.ts        # IMPORTANT: has resolve.alias for @attendance/shared → TS source
 │   └── src/
-│       ├── pages/            # LoginPage, DashboardPage, RequestFormPage, ConfirmPage, AdminPage
-│       ├── components/       # ProtectedRoute, Navbar, LanguageToggle, ProfilePanel, Toast,
-│       │                     # RequestDetailPanel
-│       ├── context/          # AuthContext, ToastContext
-│       ├── hooks/            # useRequests
-│       ├── api/              # client.ts — apiFetch with auto-refresh
-│       ├── locales/          # en.json, ja.json
-│       └── utils/            # timeOptions.ts
+│       ├── pages/
+│       │   ├── LoginPage.tsx         # Demo credential buttons (auto-fill + login)
+│       │   ├── DashboardPage.tsx     # User dashboard: stats, search, filter, sort
+│       │   ├── RequestFormPage.tsx   # Multi-type form with dropdowns, asterisks, placeholders
+│       │   ├── ConfirmPage.tsx       # Preview bilingual message, recipients, send
+│       │   └── AdminPage.tsx         # Admin dashboard: stats, search, filter, sort, detail panel
+│       ├── components/
+│       │   ├── Navbar.tsx            # Hamburger (left) → left-side drawer with profile header
+│       │   ├── LanguageToggle.tsx    # Accepts navbar prop for white frosted style on blue bar
+│       │   ├── Footer.tsx            # © MORABU HANSHIN Industry Co., Ltd.
+│       │   ├── ProtectedRoute.tsx    # Role-based route guard
+│       │   ├── RequestDetailPanel.tsx # Admin approve/reject slide-in panel
+│       │   ├── ProfilePanel.tsx      # Kept but superseded by Navbar drawer (can be removed)
+│       │   └── Toast.tsx             # Fixed-position success toast
+│       ├── context/
+│       │   ├── AuthContext.tsx       # user, loading, login(), logout() — exported as AuthContext
+│       │   └── ToastContext.tsx      # showToast(msg)
+│       ├── hooks/
+│       │   └── useRequests.ts        # Fetches /api/requests for current user
+│       ├── api/
+│       │   └── client.ts             # apiFetch with silent 401→refresh retry; token in memory
+│       ├── locales/
+│       │   ├── en.json               # Full English translations
+│       │   └── ja.json               # Full Japanese translations
+│       ├── utils/
+│       │   └── timeOptions.ts        # 5-min increment time options (00:00–23:55)
+│       ├── i18n.ts                   # i18next init; reads lang from localStorage, default ja
+│       ├── index.css                 # Minimal reset + ::placeholder { color: #c4c9d4 }
+│       └── test/
+│           └── setup.ts              # Vitest setup (jest-dom)
 ├── server/
 │   └── src/
-│       ├── routes/           # auth.ts, users.ts, requests.ts, admin.ts, attachments.ts
-│       ├── middleware/       # authMiddleware.ts, roleMiddleware.ts, errorHandler.ts
-│       ├── db/               # pool.ts, migrate.ts, seed.ts, queries/{users,requests,admin}.ts,
-│       │                     # testHelpers.ts (clearDatabase)
-│       └── services/
-│           ├── email/        # EmailService.ts (interface), NodemailerService.ts
-│           └── cleanupJob.ts # node-cron daily attachment cleanup
+│       ├── app.ts                    # createApp() factory — no listen()
+│       ├── index.ts                  # Calls createApp(), listens on PORT (default 4000)
+│       ├── config.ts                 # dotenv from ../../.env (project root), exports typed config
+│       ├── routes/
+│       │   ├── auth.ts               # POST /login, POST /refresh, POST /logout
+│       │   ├── users.ts              # GET /me, GET /me/managers, GET /me/train-lines
+│       │   ├── requests.ts           # GET, POST /requests (multipart upload via multer)
+│       │   ├── admin.ts              # GET /admin/requests (filters), PATCH /:id/status
+│       │   └── attachments.ts        # GET /attachments/:id (admin only, streams file)
+│       ├── middleware/
+│       │   ├── authMiddleware.ts     # Verifies JWT Bearer token
+│       │   ├── roleMiddleware.ts     # requireRole('admin' | 'applicant')
+│       │   └── errorHandler.ts       # Global Express error handler
+│       ├── db/
+│       │   ├── pool.ts               # pg Pool; switches to test DB when NODE_ENV=test
+│       │   ├── migrate.ts            # Runs SQL migration files
+│       │   ├── seed.ts               # Creates ADMIN-001 + EMP-001 with manager assignment
+│       │   ├── testHelpers.ts        # clearDatabase() for test beforeEach/afterAll
+│       │   ├── migrations/
+│       │   │   └── 001_initial_schema.sql  # Full schema with enums, tables, indexes
+│       │   └── queries/
+│       │       ├── users.ts          # getUserByEmployeeNumber, getManagersByEmployeeId, etc.
+│       │       ├── requests.ts       # createRequest, getUserRequests, getRequestById
+│       │       └── admin.ts          # getFilteredRequests, updateRequestStatus
+│       ├── services/
+│       │   ├── email/
+│       │   │   ├── EmailService.ts   # Interface — send(to, subject, body)
+│       │   │   └── NodemailerService.ts  # Default implementation
+│       │   └── cleanupJob.ts         # node-cron: daily delete of attachments past expires_at
+│       └── __tests__/
+│           ├── auth.test.ts
+│           ├── requests.test.ts
+│           ├── admin.test.ts
+│           └── users.test.ts
 ├── shared/
 │   └── src/
-│       ├── types.ts          # All shared TypeScript types
-│       ├── messageGenerator.ts  # Pure fn: generateMessage(input) → { japanese, english? }
-│       └── index.ts          # Re-exports types + messageGenerator
-└── package.json              # Root: npm workspaces + dev/build/test scripts
+│       ├── types.ts                  # All shared TypeScript types (interfaces only — no enums)
+│       ├── messageGenerator.ts       # generateMessage(input) → { japanese, english? }
+│       └── index.ts                  # Re-exports types + messageGenerator
+├── .env                              # Not committed — copy from .env.example
+├── .env.example                      # Template with all required keys
+└── package.json                      # Root: npm workspaces + concurrently dev script
 ```
 
 ---
 
-## Key Decisions to Know Before Coding
+## Critical Architecture Notes
 
-### Two roles, strict separation
-- `applicant` — submits requests, sees own history, cannot access `/admin`
-- `admin` — sees all requests, can approve/reject, cannot access applicant screens
-- Enforced by `roleMiddleware` on every route
+### @attendance/shared — Vite alias required
+The shared package compiles to **CommonJS** (`shared/dist/`). Browsers can't run CJS. Vite's dev server was serving it raw causing `require is not defined` white screen.
 
-### Message generator lives in `shared/`
-`generateMessage()` is a pure function used by both the React client (live preview on every form change) and Express server (email body). Never duplicate this logic.
+**Fix in `client/vite.config.ts`:**
+```ts
+resolve: {
+  alias: {
+    '@attendance/shared': path.resolve(__dirname, '../shared/src/index.ts'),
+  },
+},
+```
+This makes Vite resolve `@attendance/shared` directly to TypeScript source, transformed by esbuild (ESM). **Do not remove this alias.**
 
-### `createApp()` factory pattern
-`server/src/app.ts` exports `createApp()` (returns the Express app without starting a listener). `server/src/index.ts` calls it and listens. This pattern lets Supertest import `createApp()` directly — no port conflicts in tests.
+### import type for all shared types
+`client/tsconfig.app.json` has `verbatimModuleSyntax: true`. All type-only imports from `@attendance/shared` must use `import type`:
+```ts
+import type { Request, RequestStatus, UserProfile } from '@attendance/shared';
+import { generateMessage } from '@attendance/shared';  // ← value import, no "type"
+```
 
-### Backend tests use a real database
-`NODE_ENV=test` switches the pool to `DATABASE_TEST_URL` (`attendance_test`). Tests use `clearDatabase()` in `beforeEach`/`afterAll`. Email is mocked via `jest.mock('../services/email/NodemailerService')`.
+### createApp() factory pattern
+`server/src/app.ts` exports `createApp()` — returns the Express app without calling `.listen()`. `server/src/index.ts` calls `createApp()` then `.listen()`. Tests import `createApp()` directly via Supertest with no port conflicts.
 
-### File upload is part of request submission
-Files (PDF/XLSX, ≤3 MB) are submitted as `multipart/form-data` in `POST /api/requests`. Request + attachment are created in one DB transaction so `attachment.request_id` is always set. Files auto-delete after 60 days via `node-cron`.
+### dotenv path
+`server/src/config.ts` uses `dotenv.config({ path: path.join(__dirname, '../../.env') })` — loads `.env` from the project root, not `server/`. This is intentional for the monorepo layout.
 
-### Form state flows via React Router, not global state
-Request form → Confirm screen handoff uses `location.state`. Back to Edit restores it. No Redux/Zustand needed.
+### Backend tests use real PostgreSQL
+`NODE_ENV=test` switches `pool.ts` to `DATABASE_TEST_URL` (`attendance_test`). Tests use `clearDatabase()` in `beforeEach`/`afterAll`. Email is mocked via `jest.mock('../services/email/NodemailerService')`. Never use mocks for DB.
 
-### Access token lives in memory only
-`client/src/api/client.ts` stores the access token in a module-level variable (never localStorage — XSS safe). `apiFetch` silently calls `/api/auth/refresh` on 401 and retries.
+### SQL attachment join
+The attachment join in `requests.ts` and `admin.ts` queries uses `CASE WHEN` not `FILTER`:
+```sql
+CASE WHEN a.id IS NOT NULL THEN json_build_object(
+  'id', a.id, 'original_filename', a.original_filename, ...
+) END AS attachment
+```
+PostgreSQL 18 does not allow `FILTER` on non-aggregate functions. Do not change this to use `FILTER`.
 
-### Approval emails: rejection only
-Submitting a request → email to assigned managers. Admin rejecting → email to applicant. Admin approving → no email.
-
-### Language preference
-react-i18next, default `ja`. User preference saved to `localStorage`. The language active at form submission is stored as `input_language` on the request and controls whether the generated message is JP-only or EN+JP.
+### Access token in memory
+`client/src/api/client.ts` stores the access token in a module-level variable — never localStorage (XSS safe). `apiFetch` silently calls `/api/auth/refresh` on 401 and retries once.
 
 ---
 
-## Reason Matrix (summary — see spec §4 for full detail)
+## Form Logic (current implementation)
 
-| Request Type | Time dropdowns | Leave type | Date range |
-|---|---|---|---|
-| Late Arrival | Yes (5-min increments) | No | No |
-| Early Departure | Yes (5-min increments) | No | No |
-| Absence | No | Required | Optional |
-| Other Request | No | No | No |
+| Request Type | Date | From/To | End Date | Reason | Leave Type | Admin Message |
+|---|---|---|---|---|---|---|
+| Late Arrival | `*` | `*` | — | `*` | — | optional |
+| Early Departure | `*` | `*` | — | `*` | — | optional |
+| Absence | `*` | — | `*` | `*` | `*` | optional |
+| Other Request | `*` | optional | — | optional | — | `*` |
+
+- `*` = mandatory (shows asterisk, blocks Next button if empty)
+- Other Request is the only type where admin message is mandatory
+- Reason detail textarea appears only when `reasonCategory` is in `NEEDS_DETAIL`: `['illness', 'other_appointment', 'other']`
+- Train line picker appears only when `reasonCategory === 'train_delay'`
+
+---
+
+## UI/UX — Current State
+
+### Navbar (Navbar.tsx)
+- Sticky blue glassmorphism bar: `background: linear-gradient(160deg, rgba(96,165,250,0.82)…)` + `backdrop-filter: blur(14px)`
+- **Left**: hamburger button (☰) — opens drawer from the **left**
+- **Center**: brand name via `t('nav.brand')` — translates JA/EN
+- **Right**: compact language toggle (`EN` / `JP` pill)
+- Drawer: slides from left, `border-radius: 0 16px 16px 0`, blue gradient profile header with SVG avatar, both names (JA + EN), role badge, nav links, logout
+
+### Dashboard (DashboardPage.tsx) — user
+- 4 stat cards (Total/Pending/Approved/Rejected) — clicking status cards filters the table
+- Search bar + type filter + status filter + sort (newest/oldest/by status)
+- Clear button appears when filters are active
+- Row count footer: `n / total`
+
+### Admin Dashboard (AdminPage.tsx)
+- Same stat cards (clickable status filter)
+- Separate search row (name/employee no. + sort dropdown)
+- Separate filter row (type, status, date range with `→`)
+- Table rows open RequestDetailPanel on click
+
+### Login Page (LoginPage.tsx)
+- Demo account buttons: clicking **Admin** or **Employee** auto-fills credentials and immediately logs in
+
+### Footer (Footer.tsx)
+- `© {year} All rights reserved by MORABU HANSHIN Industry Co., Ltd.`
+- Present on: DashboardPage, AdminPage, RequestFormPage, ConfirmPage
+
+---
+
+## Environment Setup (fresh machine)
+
+```bash
+# 1. Start Postgres (Postgres.app on macOS)
+# 2. Create databases
+createdb attendance_dev
+createdb attendance_test
+
+# 3. Install dependencies
+npm install
+
+# 4. Copy and fill environment file
+cp .env.example .env
+# Fill in: DATABASE_URL, DATABASE_TEST_URL, JWT_SECRET, JWT_REFRESH_SECRET, SMTP_*
+
+# 5. Run migrations and seed
+cd server && npm run migrate
+cd server && npm run seed
+
+# 6. Start dev servers
+cd .. && npm run dev
+# Server: http://localhost:4000
+# Client: http://localhost:5173
+```
+
+---
+
+## Open / Deferred Items
+
+### Not yet built — known gaps
+| Item | Notes |
+|---|---|
+| **Admin: create/edit employees** | No UI to add employees or assign managers. Must be done via seed script or direct SQL. |
+| **Admin: register train lines** | Train lines must be inserted directly into DB. No admin UI. |
+| **Password reset** | No forgot-password flow. Future: email OTP. |
+| **CSV import** | No bulk employee import. Future feature. |
+| **Working hours constraints** | `work_start`/`work_end` columns exist on `users` table but time picker shows full range. Constraints TBD. |
+| **Email provider swap** | `EmailService` interface is ready. Swap Nodemailer for SendGrid/Resend by implementing the interface. |
+| **Frontend test coverage** | Only LoginPage has tests. DashboardPage, AdminPage, RequestFormPage, ConfirmPage have no tests. |
+| **Mobile responsiveness** | Tables overflow on small screens. No responsive breakpoints implemented. |
+| **Pagination** | Admin table loads all requests — no pagination or infinite scroll. Will degrade with large datasets. |
+| **Notification on approval** | By design: approval sends no email. Rejection sends email to applicant. Revisit if requirements change. |
+
+### ProfilePanel.tsx
+`client/src/components/ProfilePanel.tsx` still exists but is no longer used — its content was merged into the Navbar drawer. Safe to delete.
+
+---
+
+## Reason Matrix
 
 `reason_category` enum values: `illness`, `train_delay`, `oversleeping`, `personal`, `other`, `child_dropoff`, `work_appointment`, `other_appointment`, `direct_home`
 
----
-
-## Environment Setup
-
-Two PostgreSQL databases required before first run:
-```bash
-createdb attendance_dev
-createdb attendance_test
-```
-
-Copy `.env.example` to `.env` and fill in `DATABASE_URL`, `DATABASE_TEST_URL`, `JWT_SECRET`, `JWT_REFRESH_SECRET`, and SMTP credentials.
-
-Seed initial admin after migrations: `cd server && npm run seed` → creates `ADMIN-001` / `Admin1234!`.
-
----
-
-## Deferred / TBD
-
-- **Working hours** (`work_start`/`work_end` on users): columns exist in schema but time picker shows full-day range. Constraints TBD.
-- **CSV import** for employees + manager assignments: future feature.
-- **Password reset via email OTP**: future feature.
-- **Email provider swap** (SendGrid/Resend): `EmailService` interface is ready, Nodemailer is default.
+| Request Type | Available reasons |
+|---|---|
+| Late Arrival | train_delay, oversleeping, child_dropoff, other |
+| Early Departure | illness, work_appointment, other_appointment, other |
+| Absence | illness, personal, other |
+| Other Request | direct_home, other (optional) |

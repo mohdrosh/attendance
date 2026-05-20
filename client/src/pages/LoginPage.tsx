@@ -1,8 +1,14 @@
-import { useState, FormEvent } from 'react';
+import { useState } from 'react';
+import type { FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import { LanguageToggle } from '../components/LanguageToggle';
+
+const DEMO_ACCOUNTS = [
+  { label: 'Admin', id: 'ADMIN-001', password: 'Admin1234!' },
+  { label: 'Employee', id: 'EMP-001', password: 'Emp1234!' },
+];
 
 export function LoginPage() {
   const { t } = useTranslation();
@@ -31,6 +37,20 @@ export function LoginPage() {
     }
   }
 
+  async function handleDemoLogin(id: string, pwd: string) {
+    setEmployeeNumber(id);
+    setPassword(pwd);
+    setError('');
+    setLoading(true);
+    try {
+      await login(id, pwd);
+    } catch {
+      setError(t('login.error'));
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#f5f5f5' }}>
       <div style={{ position: 'absolute', top: '16px', right: '16px' }}>
@@ -38,6 +58,24 @@ export function LoginPage() {
       </div>
       <div style={{ background: 'white', padding: '40px', borderRadius: '8px', width: '360px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
         <h1 style={{ marginBottom: '24px', fontSize: '1.2em', textAlign: 'center' }}>{t('login.title')}</h1>
+
+        <div style={{ marginBottom: '20px', padding: '12px', background: '#f0f4ff', borderRadius: '6px', border: '1px solid #dce4ff' }}>
+          <p style={{ margin: '0 0 8px', fontSize: '0.75em', color: '#666', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Demo accounts</p>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            {DEMO_ACCOUNTS.map(({ label, id, password: pwd }) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => handleDemoLogin(id, pwd)}
+                style={{ flex: 1, padding: '8px', background: 'white', border: '1px solid #c7d2fe', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85em', textAlign: 'left' }}
+              >
+                <div style={{ fontWeight: 600, color: '#3730a3' }}>{label}</div>
+                <div style={{ color: '#555', fontSize: '0.9em' }}>{id}</div>
+              </button>
+            ))}
+          </div>
+        </div>
+
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: '16px' }}>
             <label htmlFor="employee_number" style={{ display: 'block', marginBottom: '4px' }}>{t('login.employee_number')}</label>

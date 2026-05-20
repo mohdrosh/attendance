@@ -31,6 +31,8 @@
     },
     "columns": {
       "date": "Date",
+      "time_from": "From",
+      "time_to": "To",
       "type": "Type",
       "reason": "Reason",
       "submitted": "Submitted",
@@ -116,6 +118,8 @@
       "name": "Name",
       "employee_number": "Emp. No.",
       "date": "Date",
+      "time_from": "From",
+      "time_to": "To",
       "type": "Type",
       "reason": "Reason",
       "leave_type": "Leave Type",

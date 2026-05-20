@@ -1,6 +1,6 @@
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { UserRole } from '@attendance/shared';
+import type { UserRole } from '@attendance/shared';
 
 interface Props {
   role: UserRole;

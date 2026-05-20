@@ -1,5 +1,6 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { UserProfile } from '@attendance/shared';
+import { createContext, useContext, useState, useEffect } from 'react';
+import type { ReactNode } from 'react';
+import type { UserProfile } from '@attendance/shared';
 import { setAccessToken, apiFetch } from '../api/client';
 
 interface AuthState {

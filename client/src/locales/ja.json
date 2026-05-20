@@ -31,6 +31,8 @@
     },
     "columns": {
       "date": "日付",
+      "time_from": "開始",
+      "time_to": "終了",
       "type": "申請種別",
       "reason": "理由",
       "submitted": "申請日",
@@ -116,6 +118,8 @@
       "name": "氏名",
       "employee_number": "社員番号",
       "date": "日付",
+      "time_from": "開始",
+      "time_to": "終了",
       "type": "申請種別",
       "reason": "理由",
       "leave_type": "休暇種別",

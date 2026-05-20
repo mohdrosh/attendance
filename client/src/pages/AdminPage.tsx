@@ -184,7 +184,7 @@ export function AdminPage() {
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e5e7eb' }}>
-                    {['name', 'employee_number', 'date', 'type', 'reason', 'submitted', 'status'].map(col => (
+                    {['name', 'employee_number', 'date', 'time_from', 'time_to', 'type', 'reason', 'submitted', 'status'].map(col => (
                       <th key={col} style={{ padding: '11px 14px', textAlign: 'left', fontSize: '0.75em', fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                         {t(`admin.columns.${col}`)}
                       </th>
@@ -206,6 +206,8 @@ export function AdminPage() {
                       </td>
                       <td style={{ padding: '12px 14px', fontSize: '0.82em', color: '#6b7280' }}>{r.employee_number}</td>
                       <td style={{ padding: '12px 14px', fontSize: '0.88em' }}>{r.start_date}{r.end_date ? ` – ${r.end_date}` : ''}</td>
+                      <td style={{ padding: '12px 14px', fontSize: '0.88em', color: '#374151' }}>{r.time_from ? r.time_from.slice(0, 5) : '—'}</td>
+                      <td style={{ padding: '12px 14px', fontSize: '0.88em', color: '#374151' }}>{r.time_to ? r.time_to.slice(0, 5) : '—'}</td>
                       <td style={{ padding: '12px 14px', fontSize: '0.88em' }}>{t(`request_type.${r.request_type}`)}</td>
                       <td style={{ padding: '12px 14px', fontSize: '0.88em', color: '#6b7280' }}>{r.reason_category ? t(`form.reasons.${r.reason_category}`) : '—'}</td>
                       <td style={{ padding: '12px 14px', fontSize: '0.88em', color: '#6b7280' }}>{new Date(r.submitted_at).toLocaleDateString()}</td>

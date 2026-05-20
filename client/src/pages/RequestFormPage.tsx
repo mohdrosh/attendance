@@ -3,21 +3,46 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import { Navbar } from '../components/Navbar';
+import { Footer } from '../components/Footer';
 import { generateTimeOptions } from '../utils/timeOptions';
-import { RequestType, ReasonCategory, LeaveType } from '@attendance/shared';
+import type { RequestType, ReasonCategory, LeaveType } from '@attendance/shared';
 
 const REASONS_BY_TYPE: Record<RequestType, ReasonCategory[]> = {
-  late: ['train_delay', 'oversleeping', 'child_dropoff', 'other'],
+  late:            ['train_delay', 'oversleeping', 'child_dropoff', 'other'],
   early_departure: ['illness', 'work_appointment', 'other_appointment', 'other'],
-  absence: ['illness', 'personal', 'other'],
-  other_request: ['direct_home', 'other'],
+  absence:         ['illness', 'personal', 'other'],
+  other_request:   ['direct_home', 'other'],
 };
 
 const NEEDS_DETAIL: ReasonCategory[] = ['illness', 'other_appointment', 'other'];
-const TIME_TYPES: RequestType[] = ['late', 'early_departure'];
+// late, early_departure, AND other_request all show time pickers
+const TIME_TYPES: RequestType[] = ['late', 'early_departure', 'other_request'];
 const LEAVE_TYPES: LeaveType[] = ['paid', 'unpaid', 'substitute', 'other'];
 const TIME_OPTIONS = generateTimeOptions();
 const today = new Date().toISOString().split('T')[0];
+
+const DETAIL_PLACEHOLDERS: Partial<Record<ReasonCategory, { ja: string; en: string }>> = {
+  train_delay:       { ja: '例：JR線の遅延証明書を添付します', en: 'e.g., Attaching train delay certificate from JR Line' },
+  illness:           { ja: '例：内科を受診しました', en: 'e.g., Visited internal medicine clinic' },
+  other_appointment: { ja: '例：歯科受診のため', en: 'e.g., Dental appointment' },
+  other:             { ja: '例：詳細を記入してください', en: 'e.g., Please describe the reason in detail' },
+};
+
+const ADMIN_MSG_PLACEHOLDERS: Record<RequestType, { ja: string; en: string }> = {
+  late:            { ja: '任意：管理者へのコメント', en: 'Optional: note to admin' },
+  early_departure: { ja: '任意：管理者へのコメント', en: 'Optional: note to admin' },
+  absence:         { ja: '任意：管理者へのコメント', en: 'Optional: note to admin' },
+  other_request: {
+    ja: '理由を明確に説明してください。',
+    en: 'Please explain the reason clearly.',
+  },
+};
+
+const inputStyle = {
+  width: '100%', padding: '9px 12px', border: '1px solid #d1d5db',
+  borderRadius: '8px', fontSize: '0.95em', boxSizing: 'border-box' as const,
+  background: 'white', color: '#111',
+};
 
 interface FormState {
   requestType: RequestType;
@@ -39,10 +64,9 @@ export function RequestFormPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const isJa = i18n.language === 'ja';
 
-  const initialForm = location.state?.form ?? null;
-
-  const [form, setForm] = useState<FormState>(initialForm ?? {
+  const [form, setForm] = useState<FormState>(location.state?.form ?? {
     requestType: 'late',
     startDate: today,
     endDate: '',
@@ -62,7 +86,7 @@ export function RequestFormPage() {
   }
 
   function handleTypeChange(type: RequestType) {
-    setForm(prev => ({ ...prev, requestType: type, reasonCategory: '', reasonDetail: '', trainLineId: '', leaveType: '' }));
+    setForm(prev => ({ ...prev, requestType: type, reasonCategory: '', reasonDetail: '', trainLineId: '', leaveType: '', endDate: '' }));
   }
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -81,10 +105,19 @@ export function RequestFormPage() {
   const showTrainLine = form.reasonCategory === 'train_delay';
   const showLeaveType = form.requestType === 'absence';
   const showEndDate = form.requestType === 'absence';
+  const isOtherRequest = form.requestType === 'other_request';
 
-  const isValid = form.reasonCategory !== '' &&
-    (!showLeaveType || form.leaveType !== '') &&
-    (!showDetail || form.reasonDetail.trim() !== '');
+  // Mandatory field flags per type
+  const reasonRequired = !isOtherRequest;
+  const endDateRequired = showEndDate;
+  const adminMessageRequired = isOtherRequest;
+
+  const isValid = isOtherRequest
+    ? form.adminMessage.trim() !== ''
+    : form.reasonCategory !== '' &&
+      (!showLeaveType || form.leaveType !== '') &&
+      (!showDetail || form.reasonDetail.trim() !== '') &&
+      (!showEndDate || form.endDate !== '');
 
   function handleNext() {
     if (!isValid || !user) return;
@@ -96,108 +129,162 @@ export function RequestFormPage() {
     });
   }
 
+  const detailPlaceholder = form.reasonCategory
+    ? (DETAIL_PLACEHOLDERS[form.reasonCategory as ReasonCategory]?.[isJa ? 'ja' : 'en'] ?? '')
+    : '';
+  const adminMsgPlaceholder = ADMIN_MSG_PLACEHOLDERS[form.requestType][isJa ? 'ja' : 'en'];
+
   return (
-    <div>
+    <div style={{ minHeight: '100vh', background: '#f8fafc', display: 'flex', flexDirection: 'column' }}>
       <Navbar />
-      <div style={{ padding: '24px', maxWidth: '600px', margin: '0 auto' }}>
-        <h1>{t('form.title')}</h1>
 
-        <div style={{ marginBottom: '16px' }}>
-          <label style={{ display: 'block', marginBottom: '4px' }}>{t('form.request_type')}</label>
-          {(['late', 'early_departure', 'absence', 'other_request'] as RequestType[]).map(type => (
-            <label key={type} style={{ marginRight: '16px', cursor: 'pointer' }}>
-              <input type="radio" name="requestType" value={type} checked={form.requestType === type} onChange={() => handleTypeChange(type)} />
-              {' '}{t(`request_type.${type}`)}
-            </label>
-          ))}
-        </div>
+      <div style={{ flex: 1, padding: '28px 20px', maxWidth: '560px', margin: '0 auto', width: '100%' }}>
+        <h1 style={{ fontSize: '1.4em', marginBottom: '24px', color: '#111' }}>{t('form.title')}</h1>
 
-        <div style={{ marginBottom: '16px' }}>
-          <label htmlFor="startDate" style={{ display: 'block', marginBottom: '4px' }}>{showEndDate ? t('form.start_date') : t('form.date')}</label>
-          <input id="startDate" type="date" value={form.startDate} onChange={e => set('startDate', e.target.value)} style={{ padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }} required />
-        </div>
+        <div style={{ background: 'white', borderRadius: '12px', padding: '24px', boxShadow: '0 1px 4px rgba(0,0,0,0.08)', display: 'flex', flexDirection: 'column', gap: '18px' }}>
 
-        {showEndDate && (
-          <div style={{ marginBottom: '16px' }}>
-            <label htmlFor="endDate" style={{ display: 'block', marginBottom: '4px' }}>{t('form.end_date')}</label>
-            <input id="endDate" type="date" value={form.endDate} min={form.startDate} onChange={e => set('endDate', e.target.value)} style={{ padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }} />
-          </div>
-        )}
-
-        {showTime && (
-          <div style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
-            <div>
-              <label htmlFor="timeFrom" style={{ display: 'block', marginBottom: '4px' }}>{t('form.time_from')}</label>
-              <select id="timeFrom" value={form.timeFrom} onChange={e => set('timeFrom', e.target.value)} style={{ padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}>
-                {TIME_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-              </select>
-            </div>
-            <div>
-              <label htmlFor="timeTo" style={{ display: 'block', marginBottom: '4px' }}>{t('form.time_to')}</label>
-              <select id="timeTo" value={form.timeTo} onChange={e => set('timeTo', e.target.value)} style={{ padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}>
-                {TIME_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-              </select>
-            </div>
-          </div>
-        )}
-
-        <div style={{ marginBottom: '16px' }}>
-          <label style={{ display: 'block', marginBottom: '4px' }}>{t('form.reason')}</label>
-          {reasons.map(r => (
-            <label key={r} style={{ display: 'block', cursor: 'pointer', marginBottom: '4px' }}>
-              <input type="radio" name="reason" value={r} checked={form.reasonCategory === r} onChange={() => set('reasonCategory', r)} />
-              {' '}{t(`form.reasons.${r}`)}
-            </label>
-          ))}
-        </div>
-
-        {showTrainLine && (
-          <div style={{ marginBottom: '16px' }}>
-            <label htmlFor="trainLine" style={{ display: 'block', marginBottom: '4px' }}>{t('form.train_line')}</label>
-            <select id="trainLine" value={form.trainLineId} onChange={e => set('trainLineId', e.target.value)} style={{ padding: '8px', border: '1px solid #ddd', borderRadius: '4px', width: '100%' }}>
-              <option value="">--</option>
-              {user?.trainLines.map(l => (
-                <option key={l.id} value={l.id}>{i18n.language === 'ja' ? l.line_name_ja : l.line_name_en}</option>
+          {/* Request Type */}
+          <div>
+            <Label htmlFor="requestType" required>{t('form.request_type')}</Label>
+            <select id="requestType" value={form.requestType} onChange={e => handleTypeChange(e.target.value as RequestType)} style={inputStyle}>
+              {(['late', 'early_departure', 'absence', 'other_request'] as RequestType[]).map(type => (
+                <option key={type} value={type}>{t(`request_type.${type}`)}</option>
               ))}
             </select>
           </div>
-        )}
 
-        {showDetail && (
-          <div style={{ marginBottom: '16px' }}>
-            <label htmlFor="reasonDetail" style={{ display: 'block', marginBottom: '4px' }}>{t('form.reason_detail')}</label>
-            <textarea id="reasonDetail" value={form.reasonDetail} onChange={e => set('reasonDetail', e.target.value)} rows={3} style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '4px', boxSizing: 'border-box' }} />
+          {/* Date */}
+          <div>
+            <Label htmlFor="startDate" required>{showEndDate ? t('form.start_date') : t('form.date')}</Label>
+            <input id="startDate" type="date" value={form.startDate} onChange={e => set('startDate', e.target.value)} style={inputStyle} required />
           </div>
-        )}
 
-        {showLeaveType && (
-          <div style={{ marginBottom: '16px' }}>
-            <label style={{ display: 'block', marginBottom: '4px' }}>{t('form.leave_type')}</label>
-            {LEAVE_TYPES.map(lt => (
-              <label key={lt} style={{ marginRight: '16px', cursor: 'pointer' }}>
-                <input type="radio" name="leaveType" value={lt} checked={form.leaveType === lt} onChange={() => set('leaveType', lt)} />
-                {' '}{t(`form.leave_types.${lt}`)}
-              </label>
-            ))}
+          {/* End Date (absence) */}
+          {showEndDate && (
+            <div>
+              <Label htmlFor="endDate" required={endDateRequired}>{t('form.end_date')}</Label>
+              <input id="endDate" type="date" value={form.endDate} min={form.startDate} onChange={e => set('endDate', e.target.value)} style={inputStyle} />
+            </div>
+          )}
+
+          {/* Time From / To */}
+          {showTime && (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+              <div>
+                <Label htmlFor="timeFrom" required={!isOtherRequest}>{t('form.time_from')}</Label>
+                <select id="timeFrom" value={form.timeFrom} onChange={e => set('timeFrom', e.target.value)} style={inputStyle}>
+                  {TIME_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                </select>
+              </div>
+              <div>
+                <Label htmlFor="timeTo" required={!isOtherRequest}>{t('form.time_to')}</Label>
+                <select id="timeTo" value={form.timeTo} onChange={e => set('timeTo', e.target.value)} style={inputStyle}>
+                  {TIME_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                </select>
+              </div>
+            </div>
+          )}
+
+          {/* Reason */}
+          <div>
+            <Label htmlFor="reasonCategory" required={reasonRequired}>{t('form.reason')}</Label>
+            <select id="reasonCategory" value={form.reasonCategory} onChange={e => set('reasonCategory', e.target.value as ReasonCategory)} style={inputStyle}>
+              <option value="">--</option>
+              {reasons.map(r => (
+                <option key={r} value={r}>{t(`form.reasons.${r}`)}</option>
+              ))}
+            </select>
           </div>
-        )}
 
-        <div style={{ marginBottom: '16px' }}>
-          <label htmlFor="adminMessage" style={{ display: 'block', marginBottom: '4px' }}>{t('form.admin_message')}</label>
-          <textarea id="adminMessage" value={form.adminMessage} onChange={e => set('adminMessage', e.target.value)} rows={2} style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '4px', boxSizing: 'border-box' }} />
+          {/* Train line */}
+          {showTrainLine && (
+            <div>
+              <Label htmlFor="trainLine">{t('form.train_line')}</Label>
+              <select id="trainLine" value={form.trainLineId} onChange={e => set('trainLineId', e.target.value)} style={inputStyle}>
+                <option value="">--</option>
+                {user?.trainLines.map(l => (
+                  <option key={l.id} value={l.id}>{isJa ? l.line_name_ja : l.line_name_en}</option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {/* Reason detail */}
+          {showDetail && (
+            <div>
+              <Label htmlFor="reasonDetail" required>{t('form.reason_detail')}</Label>
+              <textarea
+                id="reasonDetail" value={form.reasonDetail}
+                onChange={e => set('reasonDetail', e.target.value)}
+                rows={3} placeholder={detailPlaceholder}
+                style={{ ...inputStyle, resize: 'vertical' }}
+              />
+            </div>
+          )}
+
+          {/* Leave type (absence) */}
+          {showLeaveType && (
+            <div>
+              <Label htmlFor="leaveType" required>{t('form.leave_type')}</Label>
+              <select id="leaveType" value={form.leaveType} onChange={e => set('leaveType', e.target.value as LeaveType)} style={inputStyle}>
+                <option value="">--</option>
+                {LEAVE_TYPES.map(lt => (
+                  <option key={lt} value={lt}>{t(`form.leave_types.${lt}`)}</option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {/* Admin message */}
+          <div>
+            <Label htmlFor="adminMessage" required={adminMessageRequired}>{t('form.admin_message')}</Label>
+            <textarea
+              id="adminMessage" value={form.adminMessage}
+              onChange={e => set('adminMessage', e.target.value)}
+              rows={2} placeholder={adminMsgPlaceholder}
+              style={{ ...inputStyle, resize: 'vertical' }}
+            />
+          </div>
+
+          {/* File upload */}
+          <div>
+            <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.85em', fontWeight: 600, color: '#374151' }}>
+              {t('form.attach_file')}
+            </label>
+            <input type="file" accept=".pdf,.xlsx" onChange={handleFileChange} style={{ fontSize: '0.88em' }} />
+            {form.fileError && <p style={{ color: '#dc2626', fontSize: '0.82em', marginTop: '6px' }}>{form.fileError}</p>}
+            {form.file && !form.fileError && <p style={{ color: '#16a34a', fontSize: '0.82em', marginTop: '6px' }}>✓ {form.file.name}</p>}
+          </div>
+
+          {/* Required note */}
+          <p style={{ fontSize: '0.78em', color: '#9ca3af', margin: 0 }}>
+            <span style={{ color: '#dc2626' }}>*</span> {isJa ? '必須項目' : 'Required fields'}
+          </p>
+
+          <button
+            onClick={handleNext}
+            disabled={!isValid}
+            style={{
+              padding: '12px', background: isValid ? '#3b82f6' : '#d1d5db',
+              color: 'white', border: 'none', borderRadius: '8px',
+              cursor: isValid ? 'pointer' : 'not-allowed', fontSize: '1em', fontWeight: 600,
+            }}
+          >
+            {t('form.next')}
+          </button>
         </div>
-
-        <div style={{ marginBottom: '24px' }}>
-          <label style={{ display: 'block', marginBottom: '4px' }}>{t('form.attach_file')}</label>
-          <input type="file" accept=".pdf,.xlsx" onChange={handleFileChange} />
-          {form.fileError && <p style={{ color: 'red', fontSize: '0.85em', marginTop: '4px' }}>{form.fileError}</p>}
-          {form.file && !form.fileError && <p style={{ color: 'green', fontSize: '0.85em', marginTop: '4px' }}>✓ {form.file.name}</p>}
-        </div>
-
-        <button onClick={handleNext} disabled={!isValid} style={{ padding: '10px 24px', background: isValid ? '#2563eb' : '#ccc', color: 'white', border: 'none', borderRadius: '4px', cursor: isValid ? 'pointer' : 'not-allowed', fontSize: '1em' }}>
-          {t('form.next')}
-        </button>
       </div>
+
+      <Footer />
     </div>
+  );
+}
+
+function Label({ htmlFor, children, required }: { htmlFor?: string; children: React.ReactNode; required?: boolean }) {
+  return (
+    <label htmlFor={htmlFor} style={{ display: 'block', marginBottom: '6px', fontSize: '0.85em', fontWeight: 600, color: '#374151' }}>
+      {children}
+      {required && <span style={{ color: '#dc2626', marginLeft: '3px' }}>*</span>}
+    </label>
   );
 }

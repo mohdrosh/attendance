@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { Request as AttendanceRequest } from '@attendance/shared';
+import type { Request as AttendanceRequest } from '@attendance/shared';
 import { apiFetch } from '../api/client';
 
 export function useRequests() {

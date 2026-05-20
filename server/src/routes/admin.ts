@@ -55,7 +55,7 @@ adminRouter.patch('/requests/:id/status', async (req: AuthRequest, res: Response
         to: [result.email],
         subject: `${subjectPrefix}${result.name_ja} ${result.start_date}`,
         body,
-      });
+      }).catch(err => console.error('[email] notification failed:', err?.message));
     }
 
     res.json({ ok: true });

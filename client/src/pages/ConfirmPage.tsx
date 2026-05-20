@@ -88,9 +88,7 @@ export function ConfirmPage() {
       <div style={{ minHeight: '100vh', background: '#f8fafc', display: 'flex', flexDirection: 'column' }}>
         <Navbar />
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 20px', textAlign: 'center' }}>
-          <div style={{ fontSize: '3em', color: '#16a34a', marginBottom: '16px' }}>✓</div>
-          <h1 style={{ fontSize: '1.6em', fontWeight: 700, color: '#16a34a', marginBottom: '16px' }}>{t('confirm.submitted_title')}</h1>
-          <p style={{ fontSize: '1em', color: '#374151', marginBottom: '32px', maxWidth: '480px' }}>{t('confirm.submitted_message', { name: submittedManagerName })}</p>
+          <p style={{ fontSize: '1.1em', color: '#374151', marginBottom: '28px', maxWidth: '480px' }}>{t('confirm.submitted_message', { name: submittedManagerName })}</p>
           <button
             onClick={() => navigate('/dashboard')}
             style={{ padding: '11px 28px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, fontSize: '0.95em' }}
