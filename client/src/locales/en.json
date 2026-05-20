@@ -7,14 +7,28 @@
     "error": "Invalid employee number or password"
   },
   "nav": {
+    "brand": "Attendance System",
+    "dashboard": "My Requests",
     "new_request": "New Request",
+    "admin": "Request Management",
+    "language": "Language",
     "logout": "Logout",
     "profile": "Profile"
   },
   "dashboard": {
-    "title": "My Requests",
+    "title": "Dashboard",
     "refresh": "Refresh",
-    "no_requests": "No requests yet",
+    "no_requests": "No requests found",
+    "search_placeholder": "Search by date or type…",
+    "sort_newest": "Newest first",
+    "sort_oldest": "Oldest first",
+    "sort_status": "By status",
+    "stats": {
+      "total": "Total",
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected"
+    },
     "columns": {
       "date": "Date",
       "type": "Type",
@@ -73,16 +87,31 @@
     "message_preview": "Notification Message",
     "recipients": "Recipients (click to view)",
     "back": "Back to Edit",
-    "send": "Send"
+    "send": "Send",
+    "manager": "Manager",
+    "select_manager": "Select manager",
+    "submitted_title": "Request Submitted",
+    "submitted_message": "Your attendance request has been sent to your manager, {{name}}.",
+    "back_to_dashboard": "Back to Dashboard"
   },
   "admin": {
-    "title": "Request Management",
-    "filter_name": "Search by name",
+    "title": "Admin Dashboard",
+    "filter_name": "Search by name or employee no.",
     "filter_type": "Request Type",
     "filter_from": "From Date",
     "filter_to": "To Date",
     "filter_status": "Status",
+    "sort_newest": "Newest first",
+    "sort_oldest": "Oldest first",
+    "sort_name": "By name",
+    "sort_status": "By status",
     "all": "All",
+    "stats": {
+      "total": "Total",
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected"
+    },
     "columns": {
       "name": "Name",
       "employee_number": "Emp. No.",
@@ -100,7 +129,13 @@
     "reject": "Reject",
     "attachment": "Attachment",
     "download": "Download",
-    "admin_message": "Message from employee"
+    "admin_message": "Message from employee",
+    "send_notification": "Send notification email to employee",
+    "rejection_reason": "Rejection Reason",
+    "rejection_reason_placeholder": "Enter reason for rejection (optional)",
+    "approved_title": "Request Approved",
+    "rejected_title": "Request Rejected",
+    "close": "Close"
   },
   "profile": {
     "title": "Profile",

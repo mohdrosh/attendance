@@ -7,14 +7,28 @@
     "error": "社員番号またはパスワードが正しくありません"
   },
   "nav": {
+    "brand": "勤怠申請",
+    "dashboard": "申請一覧",
     "new_request": "新規申請",
+    "admin": "申請管理",
+    "language": "言語",
     "logout": "ログアウト",
     "profile": "プロフィール"
   },
   "dashboard": {
-    "title": "申請一覧",
+    "title": "ダッシュボード",
     "refresh": "更新",
-    "no_requests": "申請はありません",
+    "no_requests": "該当する申請はありません",
+    "search_placeholder": "日付・申請種別で検索…",
+    "sort_newest": "新しい順",
+    "sort_oldest": "古い順",
+    "sort_status": "ステータス順",
+    "stats": {
+      "total": "合計",
+      "pending": "承認待ち",
+      "approved": "承認済み",
+      "rejected": "却下"
+    },
     "columns": {
       "date": "日付",
       "type": "申請種別",
@@ -73,16 +87,31 @@
     "message_preview": "通知メッセージ",
     "recipients": "送信先（クリックして確認）",
     "back": "修正する",
-    "send": "送信する"
+    "send": "送信する",
+    "manager": "上長",
+    "select_manager": "上長を選択してください",
+    "submitted_title": "申請完了",
+    "submitted_message": "申請が {{name}} さんに送信されました。",
+    "back_to_dashboard": "ダッシュボードへ戻る"
   },
   "admin": {
-    "title": "申請管理",
-    "filter_name": "名前で検索",
+    "title": "管理ダッシュボード",
+    "filter_name": "名前・社員番号で検索",
     "filter_type": "申請種別",
     "filter_from": "開始日",
     "filter_to": "終了日",
     "filter_status": "ステータス",
+    "sort_newest": "新しい順",
+    "sort_oldest": "古い順",
+    "sort_name": "名前順",
+    "sort_status": "ステータス順",
     "all": "すべて",
+    "stats": {
+      "total": "合計",
+      "pending": "承認待ち",
+      "approved": "承認済み",
+      "rejected": "却下"
+    },
     "columns": {
       "name": "氏名",
       "employee_number": "社員番号",
@@ -100,7 +129,13 @@
     "reject": "却下",
     "attachment": "添付ファイル",
     "download": "ダウンロード",
-    "admin_message": "管理者へのメッセージ"
+    "admin_message": "管理者へのメッセージ",
+    "send_notification": "申請者にメール通知を送る",
+    "rejection_reason": "却下理由",
+    "rejection_reason_placeholder": "却下理由を入力してください（任意）",
+    "approved_title": "申請を承認しました",
+    "rejected_title": "申請を却下しました",
+    "close": "閉じる"
   },
   "profile": {
     "title": "プロフィール",
