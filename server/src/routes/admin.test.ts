@@ -19,12 +19,12 @@ beforeEach(async () => {
 
   await pool.query(
     `INSERT INTO users (employee_number, name_ja, name_en, email, password_hash, role)
-     VALUES ('ADM-001', '管理者', 'Admin', 'adm@test.com', $1, 'admin') RETURNING id`,
+     VALUES ('ADM-001', '管理者', 'Admin', 'adm@test.com', $1, 'admin')`,
     [hash]
   );
   await pool.query(
     `INSERT INTO users (employee_number, name_ja, name_en, email, password_hash, role)
-     VALUES ('EMP-001', 'テスト太郎', 'Test Taro', 'emp@test.com', $1, 'applicant') RETURNING id`,
+     VALUES ('EMP-001', 'テスト太郎', 'Test Taro', 'emp@test.com', $1, 'applicant')`,
     [hash]
   );
 
@@ -68,7 +68,7 @@ describe('GET /api/admin/requests', () => {
 });
 
 describe('PATCH /api/admin/requests/:id/status', () => {
-  it('approves a request', async () => {
+  it('approves a request and updates status in DB', async () => {
     const res = await request(app)
       .patch(`/api/admin/requests/${requestId}/status`)
       .set('Authorization', `Bearer ${adminToken}`)
@@ -79,24 +79,71 @@ describe('PATCH /api/admin/requests/:id/status', () => {
     expect(listRes.body[0].status).toBe('approved');
   });
 
-  it('sends email to applicant on rejection', async () => {
-    const { emailService } = require('../services/email/NodemailerService');
-    await request(app)
-      .patch(`/api/admin/requests/${requestId}/status`)
-      .set('Authorization', `Bearer ${adminToken}`)
-      .send({ status: 'rejected' });
-    expect(emailService.send).toHaveBeenCalledWith(
-      expect.objectContaining({ to: ['emp@test.com'] })
-    );
-  });
-
-  it('does not send email on approval', async () => {
+  it('does not send email when sendNotification is not set', async () => {
     const { emailService } = require('../services/email/NodemailerService');
     (emailService.send as jest.Mock).mockClear();
     await request(app)
       .patch(`/api/admin/requests/${requestId}/status`)
       .set('Authorization', `Bearer ${adminToken}`)
-      .send({ status: 'approved' });
+      .send({ status: 'rejected' });
     expect(emailService.send).not.toHaveBeenCalled();
+  });
+
+  it('does not send email when sendNotification is false', async () => {
+    const { emailService } = require('../services/email/NodemailerService');
+    (emailService.send as jest.Mock).mockClear();
+    await request(app)
+      .patch(`/api/admin/requests/${requestId}/status`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ status: 'rejected', sendNotification: false });
+    expect(emailService.send).not.toHaveBeenCalled();
+  });
+
+  it('sends bilingual rejection email to employee when sendNotification is true', async () => {
+    const { emailService } = require('../services/email/NodemailerService');
+    (emailService.send as jest.Mock).mockClear();
+    await request(app)
+      .patch(`/api/admin/requests/${requestId}/status`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ status: 'rejected', sendNotification: true, rejectionReason: 'Missing docs' });
+    expect(emailService.send).toHaveBeenCalledWith(
+      expect.objectContaining({
+        to: ['emp@test.com'],
+        subject: expect.stringContaining('【否認】'),
+      })
+    );
+    const callArg = (emailService.send as jest.Mock).mock.calls[0][0];
+    expect(callArg.body).toContain('Missing docs');
+  });
+
+  it('sends bilingual approval email to employee when sendNotification is true', async () => {
+    const { emailService } = require('../services/email/NodemailerService');
+    (emailService.send as jest.Mock).mockClear();
+    await request(app)
+      .patch(`/api/admin/requests/${requestId}/status`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ status: 'approved', sendNotification: true });
+    expect(emailService.send).toHaveBeenCalledWith(
+      expect.objectContaining({
+        to: ['emp@test.com'],
+        subject: expect.stringContaining('【承認】'),
+      })
+    );
+  });
+
+  it('returns 400 for invalid status', async () => {
+    const res = await request(app)
+      .patch(`/api/admin/requests/${requestId}/status`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ status: 'invalid' });
+    expect(res.status).toBe(400);
+  });
+
+  it('returns 403 for applicants', async () => {
+    const res = await request(app)
+      .patch(`/api/admin/requests/${requestId}/status`)
+      .set('Authorization', `Bearer ${employeeToken}`)
+      .send({ status: 'approved' });
+    expect(res.status).toBe(403);
   });
 });
