@@ -8,6 +8,7 @@ import { userRouter } from './routes/users';
 import { requestRouter } from './routes/requests';
 import { adminRouter } from './routes/admin';
 import { attachmentRouter } from './routes/attachments';
+import { employeesRouter } from './routes/employees';
 
 export function createApp() {
   const app = express();
@@ -23,6 +24,7 @@ export function createApp() {
   app.use('/api/auth', authRouter);
   app.use('/api/users', userRouter);
   app.use('/api/requests', requestRouter);
+  app.use('/api/admin/employees', employeesRouter);
   app.use('/api/admin', adminRouter);
   app.use('/api/attachments', attachmentRouter);
 
