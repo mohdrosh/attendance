@@ -87,4 +87,49 @@ describe('POST /api/requests', () => {
       .field('inputLanguage', 'ja');
     expect(res.status).toBe(403);
   });
+
+  it('sends email to selected manager when managerId is provided', async () => {
+    const { emailService } = require('../services/email/NodemailerService');
+    (emailService.send as jest.Mock).mockClear();
+
+    const hash = await bcrypt.hash('Test1234!', 10);
+    const { rows: [manager] } = await pool.query(
+      `INSERT INTO users (employee_number, name_ja, name_en, email, password_hash, role)
+       VALUES ('MGR-001', '田中部長', 'Manager Tanaka', 'mgr@test.com', $1, 'admin') RETURNING id`,
+      [hash]
+    );
+    const { rows: [emp] } = await pool.query(`SELECT id FROM users WHERE employee_number = 'EMP-001'`);
+    await pool.query(
+      `INSERT INTO employee_managers (employee_id, manager_id) VALUES ($1, $2)`,
+      [emp.id, manager.id]
+    );
+
+    await request(app)
+      .post('/api/requests')
+      .set('Authorization', `Bearer ${token}`)
+      .field('requestType', 'late')
+      .field('startDate', '2024-01-15')
+      .field('reasonCategory', 'oversleeping')
+      .field('inputLanguage', 'ja')
+      .field('managerId', manager.id);
+
+    expect(emailService.send).toHaveBeenCalledWith(
+      expect.objectContaining({ to: ['mgr@test.com'] })
+    );
+  });
+
+  it('does not send email when managerId is not provided', async () => {
+    const { emailService } = require('../services/email/NodemailerService');
+    (emailService.send as jest.Mock).mockClear();
+
+    await request(app)
+      .post('/api/requests')
+      .set('Authorization', `Bearer ${token}`)
+      .field('requestType', 'late')
+      .field('startDate', '2024-01-15')
+      .field('reasonCategory', 'oversleeping')
+      .field('inputLanguage', 'ja');
+
+    expect(emailService.send).not.toHaveBeenCalled();
+  });
 });

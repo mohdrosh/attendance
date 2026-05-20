@@ -39,7 +39,7 @@ requestRouter.post('/', upload.single('file'), async (req: AuthRequest, res: Res
     const {
       requestType, startDate, endDate, timeFrom, timeTo,
       reasonCategory, reasonDetail, trainLineId, leaveType,
-      adminMessage, inputLanguage,
+      adminMessage, inputLanguage, managerId,
     } = req.body;
 
     if (!requestType || !startDate || !reasonCategory || !inputLanguage) {
@@ -74,9 +74,12 @@ requestRouter.post('/', upload.single('file'), async (req: AuthRequest, res: Res
     }
 
     const user = await getUserWithTrainLines(req.user!.id);
-    const managers = await getManagersByEmployeeId(req.user!.id);
 
-    if (managers.length > 0 && user) {
+    if (managerId && user) {
+      const managers = await getManagersByEmployeeId(req.user!.id);
+      const selectedManager = managers.find(m => m.id === managerId);
+      if (!selectedManager) throw new AppError(400, 'Invalid managerId');
+
       const trainLine = user.trainLines.find(l => l.id === trainLineId);
       const msgInput = {
         requestType, reasonCategory, reasonDetail, trainLineName: trainLine?.line_name_ja,
@@ -91,7 +94,7 @@ requestRouter.post('/', upload.single('file'), async (req: AuthRequest, res: Res
         absence: '【欠勤連絡】', other_request: '【その他連絡】',
       };
       await emailService.send({
-        to: managers.map(m => m.email),
+        to: [selectedManager.email],
         subject: `${subjects[requestType]}${user.name_ja} ${startDate}`,
         body,
       });
