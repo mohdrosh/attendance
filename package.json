@@ -9,6 +9,9 @@
     "start": "node server/dist/db/migrate.js && node server/dist/db/seed.js && node server/dist/index.js",
     "test": "npm run test -w shared && npm run test -w server"
   },
+  "engines": {
+    "node": ">=22"
+  },
   "devDependencies": {
     "concurrently": "^8.2.2"
   }
