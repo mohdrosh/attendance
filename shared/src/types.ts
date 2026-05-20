@@ -83,3 +83,16 @@ export interface MessageOutput {
   japanese: string;
   english?: string;
 }
+
+export interface NotificationInput {
+  requestType: RequestType;
+  startDate: string;
+  endDate?: string;
+  timeFrom?: string;
+  timeTo?: string;
+  employeeName: { ja: string; en: string };
+}
+
+export interface RejectionNotificationInput extends NotificationInput {
+  rejectionReason?: string;
+}
