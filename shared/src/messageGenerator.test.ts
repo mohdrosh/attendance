@@ -143,3 +143,80 @@ describe('generateMessage', () => {
     });
   });
 });
+
+import { generateApprovalNotification, generateRejectionNotification } from './messageGenerator';
+
+const baseNotif = {
+  requestType: 'late' as const,
+  startDate: '2024-01-15',
+  timeFrom: '09:00',
+  timeTo: '10:00',
+  employeeName: { ja: '山田太郎', en: 'Taro Yamada' },
+};
+
+describe('generateApprovalNotification', () => {
+  it('returns japanese and english bodies', () => {
+    const result = generateApprovalNotification(baseNotif);
+    expect(result.japanese).toBeDefined();
+    expect(result.english).toBeDefined();
+  });
+
+  it('includes 【承認】 in japanese subject', () => {
+    const result = generateApprovalNotification(baseNotif);
+    expect(result.japanese).toContain('【承認】');
+  });
+
+  it('includes [Approved] in english subject', () => {
+    const result = generateApprovalNotification(baseNotif);
+    expect(result.english).toContain('[Approved]');
+  });
+
+  it('includes employee name in both languages', () => {
+    const result = generateApprovalNotification(baseNotif);
+    expect(result.japanese).toContain('山田太郎');
+    expect(result.english).toContain('Taro Yamada');
+  });
+
+  it('includes time range when provided', () => {
+    const result = generateApprovalNotification(baseNotif);
+    expect(result.japanese).toContain('09:00');
+    expect(result.english).toContain('10:00');
+  });
+
+  it('omits time when not provided', () => {
+    const { timeFrom, timeTo, ...noTime } = baseNotif;
+    const result = generateApprovalNotification(noTime);
+    expect(result.japanese).not.toContain('時間');
+    expect(result.english).not.toContain('Time:');
+  });
+});
+
+describe('generateRejectionNotification', () => {
+  it('returns japanese and english bodies', () => {
+    const result = generateRejectionNotification(baseNotif);
+    expect(result.japanese).toBeDefined();
+    expect(result.english).toBeDefined();
+  });
+
+  it('includes 【否認】 in japanese subject', () => {
+    const result = generateRejectionNotification(baseNotif);
+    expect(result.japanese).toContain('【否認】');
+  });
+
+  it('includes [Not Approved] in english subject', () => {
+    const result = generateRejectionNotification(baseNotif);
+    expect(result.english).toContain('[Not Approved]');
+  });
+
+  it('includes rejection reason when provided', () => {
+    const result = generateRejectionNotification({ ...baseNotif, rejectionReason: 'Missing documentation' });
+    expect(result.japanese).toContain('Missing documentation');
+    expect(result.english).toContain('Missing documentation');
+  });
+
+  it('omits rejection reason line when not provided', () => {
+    const result = generateRejectionNotification(baseNotif);
+    expect(result.japanese).not.toContain('理由：');
+    expect(result.english).not.toContain('Reason:');
+  });
+});

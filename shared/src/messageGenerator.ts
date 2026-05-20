@@ -1,4 +1,4 @@
-import { MessageInput, MessageOutput } from './types';
+import { MessageInput, MessageOutput, NotificationInput, RejectionNotificationInput } from './types';
 
 function formatDateJa(iso: string): string {
   const d = new Date(iso + 'T00:00:00');
@@ -132,4 +132,109 @@ export function generateMessage(input: MessageInput): MessageOutput {
     return { japanese, english: buildEnglish(input) };
   }
   return { japanese };
+}
+
+const requestTypeJa: Record<string, string> = {
+  late: '遅刻',
+  early_departure: '早退',
+  absence: '欠勤',
+  other_request: 'その他',
+};
+
+const requestTypeEn: Record<string, string> = {
+  late: 'Late Arrival',
+  early_departure: 'Early Departure',
+  absence: 'Absence',
+  other_request: 'Other Request',
+};
+
+export function generateApprovalNotification(input: NotificationInput): MessageOutput {
+  const dateJa = input.endDate
+    ? `${formatDateJa(input.startDate)}～${formatDateJa(input.endDate)}`
+    : formatDateJa(input.startDate);
+  const dateEn = input.endDate
+    ? `${formatDateEn(input.startDate)} – ${formatDateEn(input.endDate)}`
+    : formatDateEn(input.startDate);
+
+  const timeJa = input.timeFrom
+    ? `\n時間：${input.timeFrom}${input.timeTo ? ` 〜 ${input.timeTo}` : ''}`
+    : '';
+  const timeEn = input.timeFrom
+    ? `\nTime: ${input.timeFrom}${input.timeTo ? ` – ${input.timeTo}` : ''}`
+    : '';
+
+  const japanese = [
+    `件名：【承認】${input.employeeName.ja}　${dateJa}`,
+    '',
+    `${input.employeeName.ja} さん`,
+    '',
+    `申請種別：${requestTypeJa[input.requestType]}`,
+    `申請日：${dateJa}${timeJa}`,
+    '',
+    'ご申請の内容を承認しました。',
+  ].join('\n');
+
+  const english = [
+    `Subject: [Approved] ${input.employeeName.en} – ${dateEn}`,
+    '',
+    `Dear ${input.employeeName.en},`,
+    '',
+    `Type: ${requestTypeEn[input.requestType]}`,
+    `Date: ${dateEn}${timeEn}`,
+    '',
+    'Your attendance request has been approved.',
+  ].join('\n');
+
+  return { japanese, english };
+}
+
+export function generateRejectionNotification(input: RejectionNotificationInput): MessageOutput {
+  const dateJa = input.endDate
+    ? `${formatDateJa(input.startDate)}～${formatDateJa(input.endDate)}`
+    : formatDateJa(input.startDate);
+  const dateEn = input.endDate
+    ? `${formatDateEn(input.startDate)} – ${formatDateEn(input.endDate)}`
+    : formatDateEn(input.startDate);
+
+  const timeJa = input.timeFrom
+    ? `\n時間：${input.timeFrom}${input.timeTo ? ` 〜 ${input.timeTo}` : ''}`
+    : '';
+  const timeEn = input.timeFrom
+    ? `\nTime: ${input.timeFrom}${input.timeTo ? ` – ${input.timeTo}` : ''}`
+    : '';
+
+  const jaLines = [
+    `件名：【否認】${input.employeeName.ja}　${dateJa}`,
+    '',
+    `${input.employeeName.ja} さん`,
+    '',
+    `申請種別：${requestTypeJa[input.requestType]}`,
+    `申請日：${dateJa}${timeJa}`,
+    '',
+    '申し訳ありませんが、ご申請の内容を承認することができませんでした。',
+  ];
+  if (input.rejectionReason) {
+    jaLines.push('', `理由：${input.rejectionReason}`);
+  }
+  jaLines.push('', '詳細については、担当者にお問い合わせください。');
+
+  const enLines = [
+    `Subject: [Not Approved] ${input.employeeName.en} – ${dateEn}`,
+    '',
+    `Dear ${input.employeeName.en},`,
+    '',
+    `Type: ${requestTypeEn[input.requestType]}`,
+    `Date: ${dateEn}${timeEn}`,
+    '',
+    'We regret to inform you that your attendance request has not been approved.',
+  ];
+  if (input.rejectionReason) {
+    enLines.push('', `Reason: ${input.rejectionReason}`);
+  }
+  enLines.push('', 'Please contact your manager for further details.');
+
+  return {
+    japanese: jaLines.join('\n'),
+    english: enLines.join('\n'),
+  };
 }
