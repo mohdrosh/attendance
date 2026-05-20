@@ -169,7 +169,7 @@ export function generateApprovalNotification(input: NotificationInput): MessageO
     `${input.employeeName.ja} さん`,
     '',
     `申請種別：${requestTypeJa[input.requestType]}`,
-    `申請日：${dateJa}${timeJa}`,
+    `対象日：${dateJa}${timeJa}`,
     '',
     'ご申請の内容を承認しました。',
   ].join('\n');
@@ -209,7 +209,7 @@ export function generateRejectionNotification(input: RejectionNotificationInput)
     `${input.employeeName.ja} さん`,
     '',
     `申請種別：${requestTypeJa[input.requestType]}`,
-    `申請日：${dateJa}${timeJa}`,
+    `対象日：${dateJa}${timeJa}`,
     '',
     '申し訳ありませんが、ご申請の内容を承認することができませんでした。',
   ];

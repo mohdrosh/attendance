@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { generateMessage } from './messageGenerator';
+import { generateMessage, generateApprovalNotification, generateRejectionNotification } from './messageGenerator';
 
 const baseLate = {
   requestType: 'late' as const,
@@ -143,8 +143,6 @@ describe('generateMessage', () => {
     });
   });
 });
-
-import { generateApprovalNotification, generateRejectionNotification } from './messageGenerator';
 
 const baseNotif = {
   requestType: 'late' as const,
