@@ -96,7 +96,7 @@ requestRouter.post('/', upload.single('file'), async (req: AuthRequest, res: Res
         late: '【遅刻連絡】', early_departure: '【早退連絡】',
         absence: '【欠勤連絡】', other_request: '【その他連絡】',
       };
-      await emailService.send({
+      emailService.send({
         to: [selectedManager.email],
         subject: `${subjects[requestType]}${user.name_ja} ${startDate}`,
         body,

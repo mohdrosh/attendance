@@ -51,7 +51,7 @@ adminRouter.patch('/requests/:id/status', async (req: AuthRequest, res: Response
       const body = english ? `[English]\n${english}\n\n[日本語]\n${japanese}` : japanese;
       const subjectPrefix = status === 'approved' ? '【承認】' : '【否認】';
 
-      await emailService.send({
+      emailService.send({
         to: [result.email],
         subject: `${subjectPrefix}${result.name_ja} ${result.start_date}`,
         body,
