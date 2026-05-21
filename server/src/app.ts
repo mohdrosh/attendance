@@ -11,6 +11,8 @@ import { requestRouter } from './routes/requests';
 import { adminRouter } from './routes/admin';
 import { attachmentRouter } from './routes/attachments';
 import { employeesRouter } from './routes/employees';
+import { emailService } from './services/email/NodemailerService';
+import { config } from './config';
 
 const isProd = process.env.NODE_ENV === 'production';
 const clientDist = path.join(__dirname, '../../client/dist');
@@ -29,6 +31,20 @@ export function createApp() {
 
   app.use(express.json());
   app.use(cookieParser());
+
+  app.get('/api/health/email', async (_req, res) => {
+    try {
+      await emailService.send({
+        to: [config.smtp.user],
+        subject: 'Railway SMTP health check',
+        body: 'If you see this, SMTP is working on Railway.',
+      });
+      res.json({ ok: true, message: 'Email sent to ' + config.smtp.user });
+    } catch (err: unknown) {
+      const e = err as Error & { code?: string; response?: string };
+      res.status(500).json({ ok: false, error: e.message, code: e.code, response: e.response });
+    }
+  });
 
   app.use('/api/auth', authRouter);
   app.use('/api/users', userRouter);
