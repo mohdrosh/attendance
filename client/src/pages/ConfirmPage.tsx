@@ -60,7 +60,7 @@ export function ConfirmPage() {
       if (form.endDate) formData.append('endDate', form.endDate);
       if (form.timeFrom) formData.append('timeFrom', form.timeFrom);
       if (form.timeTo) formData.append('timeTo', form.timeTo);
-      formData.append('reasonCategory', form.reasonCategory);
+      if (form.reasonCategory) formData.append('reasonCategory', form.reasonCategory);
       if (form.reasonDetail) formData.append('reasonDetail', form.reasonDetail);
       if (form.trainLineId) formData.append('trainLineId', form.trainLineId);
       if (form.leaveType) formData.append('leaveType', form.leaveType);

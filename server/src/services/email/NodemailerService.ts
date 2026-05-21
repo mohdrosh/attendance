@@ -6,6 +6,7 @@ export class NodemailerService implements EmailService {
   private transporter = nodemailer.createTransport({
     host: config.smtp.host,
     port: config.smtp.port,
+    secure: false,
     auth: { user: config.smtp.user, pass: config.smtp.pass },
   });
 

@@ -42,7 +42,10 @@ requestRouter.post('/', upload.single('file'), async (req: AuthRequest, res: Res
       adminMessage, inputLanguage, managerId,
     } = req.body;
 
-    if (!requestType || !startDate || !reasonCategory || !inputLanguage) {
+    if (!requestType || !startDate || !inputLanguage) {
+      throw new AppError(400, 'Missing required fields');
+    }
+    if (requestType !== 'other_request' && !reasonCategory) {
       throw new AppError(400, 'Missing required fields');
     }
 

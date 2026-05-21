@@ -89,7 +89,7 @@ function buildJapanese(input: MessageInput): string {
     const leaveStr = input.leaveType ? `（${leaveMap[input.leaveType]}）` : '';
     body = `${dateStr}${leaveStr}、${reason}お休みをいただきます。`;
   } else {
-    body = `${dateStr}、${reason}直帰いたします。`;
+    body = reason ? `${dateStr}、${reason}直帰いたします。` : `${dateStr}、直帰いたします。`;
   }
 
   const apology = 'ご迷惑をおかけし、申し訳ございません。';

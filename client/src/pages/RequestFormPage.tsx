@@ -66,6 +66,8 @@ export function RequestFormPage() {
   const location = useLocation();
   const isJa = i18n.language === 'ja';
 
+  const [fileInputKey, setFileInputKey] = useState(0);
+
   const [form, setForm] = useState<FormState>(location.state?.form ?? {
     requestType: 'late',
     startDate: today,
@@ -251,9 +253,20 @@ export function RequestFormPage() {
             <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.85em', fontWeight: 600, color: '#374151' }}>
               {t('form.attach_file')}
             </label>
-            <input type="file" accept=".pdf,.xlsx" onChange={handleFileChange} style={{ fontSize: '0.88em' }} />
+            {form.file ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 12px', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '8px' }}>
+                <span style={{ color: '#16a34a', fontSize: '0.88em', flex: 1 }}>✓ {form.file.name}</span>
+                <button
+                  type="button"
+                  onClick={() => { setForm(prev => ({ ...prev, file: null, fileError: '' })); setFileInputKey(k => k + 1); }}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', fontSize: '1em', lineHeight: 1, padding: '2px 4px' }}
+                  title="Remove file"
+                >✕</button>
+              </div>
+            ) : (
+              <input key={fileInputKey} type="file" accept=".pdf,.xlsx" onChange={handleFileChange} style={{ fontSize: '0.88em' }} />
+            )}
             {form.fileError && <p style={{ color: '#dc2626', fontSize: '0.82em', marginTop: '6px' }}>{form.fileError}</p>}
-            {form.file && !form.fileError && <p style={{ color: '#16a34a', fontSize: '0.82em', marginTop: '6px' }}>✓ {form.file.name}</p>}
           </div>
 
           {/* Required note */}

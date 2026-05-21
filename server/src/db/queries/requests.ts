@@ -8,7 +8,7 @@ export interface CreateRequestInput {
   endDate?: string;
   timeFrom?: string;
   timeTo?: string;
-  reasonCategory: ReasonCategory;
+  reasonCategory?: ReasonCategory | '';
   reasonDetail?: string;
   trainLineId?: string;
   leaveType?: LeaveType;
@@ -25,7 +25,7 @@ export async function createRequest(input: CreateRequestInput): Promise<string> 
     [
       input.employeeId, input.requestType, input.startDate,
       input.endDate ?? null, input.timeFrom ?? null, input.timeTo ?? null,
-      input.reasonCategory, input.reasonDetail ?? null, input.trainLineId ?? null,
+      input.reasonCategory || null, input.reasonDetail ?? null, input.trainLineId ?? null,
       input.leaveType ?? null, input.adminMessage ?? null, input.inputLanguage,
     ]
   );
