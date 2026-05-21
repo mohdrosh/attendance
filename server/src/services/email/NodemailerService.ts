@@ -1,8 +1,9 @@
 import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 import { EmailService, SendOptions } from './EmailService';
 import { config } from '../../config';
 
-export class NodemailerService implements EmailService {
+class NodemailerService implements EmailService {
   private transporter = nodemailer.createTransport({
     host: config.smtp.host,
     port: config.smtp.port,
@@ -20,4 +21,20 @@ export class NodemailerService implements EmailService {
   }
 }
 
-export const emailService: EmailService = new NodemailerService();
+class ResendEmailService implements EmailService {
+  private client = new Resend(process.env.RESEND_API_KEY);
+
+  async send({ to, subject, body }: SendOptions): Promise<void> {
+    const { error } = await this.client.emails.send({
+      from: config.smtp.from,
+      to,
+      subject,
+      text: body,
+    });
+    if (error) throw new Error(error.message);
+  }
+}
+
+export const emailService: EmailService = process.env.RESEND_API_KEY
+  ? new ResendEmailService()
+  : new NodemailerService();
