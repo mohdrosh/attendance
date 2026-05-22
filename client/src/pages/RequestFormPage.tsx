@@ -54,7 +54,6 @@ interface FormState {
   timeTo: string;
   reasonCategory: ReasonCategory | '';
   reasonDetail: string;
-  trainLineId: string;
   leaveType: LeaveType | '';
   adminMessage: string;
   file: File | null;
@@ -78,7 +77,6 @@ export function RequestFormPage() {
     timeTo: '10:00',
     reasonCategory: '',
     reasonDetail: '',
-    trainLineId: '',
     leaveType: '',
     adminMessage: '',
     file: null,
@@ -90,7 +88,7 @@ export function RequestFormPage() {
   }
 
   function handleTypeChange(type: RequestType) {
-    setForm(prev => ({ ...prev, requestType: type, reasonCategory: '', reasonDetail: '', trainLineId: '', leaveType: '', endDate: '' }));
+    setForm(prev => ({ ...prev, requestType: type, reasonCategory: '', reasonDetail: '', leaveType: '', endDate: '' }));
   }
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -176,13 +174,13 @@ export function RequestFormPage() {
           {showTime && (
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
               <div>
-                <Label htmlFor="timeFrom" required={!isOtherRequest}>{t('form.time_from')}</Label>
+                <Label htmlFor="timeFrom" required={!isOtherRequest && !hasOptionalReason}>{t('form.time_from')}</Label>
                 <select id="timeFrom" value={form.timeFrom} onChange={e => set('timeFrom', e.target.value)} style={inputStyle}>
                   {TIME_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                 </select>
               </div>
               <div>
-                <Label htmlFor="timeTo" required={!isOtherRequest}>{t('form.time_to')}</Label>
+                <Label htmlFor="timeTo" required={!isOtherRequest && !hasOptionalReason}>{t('form.time_to')}</Label>
                 <select id="timeTo" value={form.timeTo} onChange={e => set('timeTo', e.target.value)} style={inputStyle}>
                   {TIME_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                 </select>
@@ -206,7 +204,7 @@ export function RequestFormPage() {
           {/* Reason detail */}
           {showDetail && (
             <div>
-              <Label htmlFor="reasonDetail" required>{t('form.reason_detail')}</Label>
+              <Label htmlFor="reasonDetail" required={!hasOptionalReason}>{t('form.reason_detail')}</Label>
               <textarea
                 id="reasonDetail" value={form.reasonDetail}
                 onChange={e => set('reasonDetail', e.target.value)}
