@@ -52,7 +52,7 @@ export interface Request {
   end_date: string | null;
   time_from: string | null;
   time_to: string | null;
-  reason_category: ReasonCategory;
+  reason_category: ReasonCategory | null;
   reason_detail: string | null;
   train_line_id: string | null;
   train_line_name_ja: string | null;
