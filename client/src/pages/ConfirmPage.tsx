@@ -33,14 +33,11 @@ export function ConfirmPage() {
     return null;
   }
 
-  const trainLine = user.trainLines.find((l: { id: string }) => l.id === form.trainLineId);
-  const trainLineName = i18n.language === 'ja' ? trainLine?.line_name_ja : trainLine?.line_name_en;
-
   const { japanese, english } = generateMessage({
     requestType: form.requestType,
     reasonCategory: form.reasonCategory,
     reasonDetail: form.reasonDetail || undefined,
-    trainLineName,
+    trainLineName: undefined,
     startDate: form.startDate,
     endDate: form.endDate || undefined,
     timeFrom: form.timeFrom || undefined,
@@ -62,7 +59,6 @@ export function ConfirmPage() {
       if (form.timeTo) formData.append('timeTo', form.timeTo);
       if (form.reasonCategory) formData.append('reasonCategory', form.reasonCategory);
       if (form.reasonDetail) formData.append('reasonDetail', form.reasonDetail);
-      if (form.trainLineId) formData.append('trainLineId', form.trainLineId);
       if (form.leaveType) formData.append('leaveType', form.leaveType);
       if (form.adminMessage) formData.append('adminMessage', form.adminMessage);
       formData.append('inputLanguage', form.inputLanguage);

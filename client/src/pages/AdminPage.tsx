@@ -150,7 +150,7 @@ export function AdminPage() {
           <span style={{ fontSize: '0.78em', fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', marginRight: '4px' }}>Filter</span>
           <select value={filterType} onChange={e => setFilterType(e.target.value as RequestType | '')} style={selectStyle}>
             <option value="">{t('admin.all')} ({t('form.request_type')})</option>
-            {(['late', 'early_departure', 'absence', 'other_request'] as RequestType[]).map(type => (
+            {(['late', 'early_departure', 'absence', 'chokko', 'chokki', 'kyujitsu_shukkin', 'other_request'] as RequestType[]).map(type => (
               <option key={type} value={type}>{t(`request_type.${type}`)}</option>
             ))}
           </select>
