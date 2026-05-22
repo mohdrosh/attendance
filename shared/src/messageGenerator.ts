@@ -43,6 +43,8 @@ function reasonBodyJa(input: MessageInput): string {
       return '天候・交通機関の影響のため';
     case 'other':
       return `${input.reasonDetail ?? 'その他の理由'}のため`;
+    default:
+      return '';
   }
 }
 
@@ -59,6 +61,8 @@ function reasonBodyEn(input: MessageInput): string {
       return 'weather or transportation issues';
     case 'other':
       return input.reasonDetail ?? 'other reasons';
+    default:
+      return '';
   }
 }
 
@@ -95,9 +99,8 @@ function buildJapanese(input: MessageInput): string {
       ? `${dateStr}、出社いたします。（${reason}）`
       : `${dateStr}、出社いたします。`;
   } else {
-    body = reason
-      ? `${dateStr}、${reason}直帰いたします。`
-      : `${dateStr}、直帰いたします。`;
+    // other_request: admin message carries the substantive content
+    body = `${dateStr}、ご連絡いたします。`;
   }
 
   const apology = 'ご迷惑をおかけし、申し訳ございません。';
@@ -139,7 +142,8 @@ function buildEnglish(input: MessageInput): string {
       ? `I will be working on ${dateStr} (holiday) due to ${reason}.`
       : `I will be working on ${dateStr} (holiday).`;
   } else {
-    body = `I will be going home directly from a client meeting on ${dateStr}.`;
+    // other_request: admin message carries the substantive content
+    body = `I have a notice regarding ${dateStr}.`;
   }
 
   const apology = 'I sincerely apologize for the inconvenience.';
