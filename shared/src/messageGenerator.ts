@@ -11,49 +11,53 @@ function formatDateEn(iso: string): string {
 }
 
 const subjectJa: Record<string, string> = {
-  late: '【遅刻連絡】',
-  early_departure: '【早退連絡】',
-  absence: '【欠勤連絡】',
-  other_request: '【その他連絡】',
+  late:             '【遅刻連絡】',
+  early_departure:  '【早退連絡】',
+  absence:          '【欠勤連絡】',
+  other_request:    '【その他連絡】',
+  chokko:           '【直行連絡】',
+  chokki:           '【直帰連絡】',
+  kyujitsu_shukkin: '【休日出勤連絡】',
 };
 
 const subjectEn: Record<string, string> = {
-  late: '[Late Arrival Notice]',
-  early_departure: '[Early Departure Notice]',
-  absence: '[Absence Notice]',
-  other_request: '[Other Request]',
+  late:             '[Late Arrival Notice]',
+  early_departure:  '[Early Departure Notice]',
+  absence:          '[Absence Notice]',
+  other_request:    '[Other Request]',
+  chokko:           '[Direct to Client Notice]',
+  chokki:           '[Going Directly Home Notice]',
+  kyujitsu_shukkin: '[Holiday Work Notice]',
 };
 
 function reasonBodyJa(input: MessageInput): string {
+  if (!input.reasonCategory) return '';
   switch (input.reasonCategory) {
     case 'illness':
       return `体調不良${input.reasonDetail ? `（${input.reasonDetail}）` : ''}のため`;
     case 'family':
-      return `家族の事情${input.reasonDetail ? `（${input.reasonDetail}）` : ''}のため`;
+      return '家庭の事情のため';
     case 'personal':
       return '私用のため';
     case 'weather_transport':
-      return `交通・天候事情${input.reasonDetail ? `（${input.reasonDetail}）` : ''}のため`;
+      return '天候・交通機関の影響のため';
     case 'other':
       return `${input.reasonDetail ?? 'その他の理由'}のため`;
-    default:
-      return input.reasonDetail ? `${input.reasonDetail}のため` : '';
   }
 }
 
 function reasonBodyEn(input: MessageInput): string {
+  if (!input.reasonCategory) return '';
   switch (input.reasonCategory) {
     case 'illness':
       return `illness${input.reasonDetail ? ` (${input.reasonDetail})` : ''}`;
     case 'family':
-      return `family circumstances${input.reasonDetail ? ` (${input.reasonDetail})` : ''}`;
+      return 'family circumstances';
     case 'personal':
       return 'personal reasons';
     case 'weather_transport':
-      return `weather/transport issues${input.reasonDetail ? ` (${input.reasonDetail})` : ''}`;
+      return 'weather or transportation issues';
     case 'other':
-      return input.reasonDetail ?? 'other reasons';
-    default:
       return input.reasonDetail ?? 'other reasons';
   }
 }
@@ -73,11 +77,27 @@ function buildJapanese(input: MessageInput): string {
   } else if (input.requestType === 'early_departure') {
     body = `本日、${reason}、\n${input.timeFrom}頃に早退させていただきます。`;
   } else if (input.requestType === 'absence') {
-    const leaveMap: Record<string, string> = { paid: '有給休暇', unpaid: '欠勤', substitute: '振替休日', special: '特別休暇' };
+    const leaveMap: Record<string, string> = {
+      paid: '有給休暇', unpaid: '欠勤', substitute: '振替休日', special: '特別休暇（慶弔）',
+    };
     const leaveStr = input.leaveType ? `（${leaveMap[input.leaveType]}）` : '';
     body = `${dateStr}${leaveStr}、${reason}お休みをいただきます。`;
+  } else if (input.requestType === 'chokko') {
+    body = reason
+      ? `${dateStr}、${reason}直行いたします。`
+      : `${dateStr}、直行いたします。`;
+  } else if (input.requestType === 'chokki') {
+    body = reason
+      ? `${dateStr}、${reason}直帰いたします。`
+      : `${dateStr}、直帰いたします。`;
+  } else if (input.requestType === 'kyujitsu_shukkin') {
+    body = reason
+      ? `${dateStr}、出社いたします。（${reason}）`
+      : `${dateStr}、出社いたします。`;
   } else {
-    body = reason ? `${dateStr}、${reason}直帰いたします。` : `${dateStr}、直帰いたします。`;
+    body = reason
+      ? `${dateStr}、${reason}直帰いたします。`
+      : `${dateStr}、直帰いたします。`;
   }
 
   const apology = 'ご迷惑をおかけし、申し訳ございません。';
@@ -101,9 +121,23 @@ function buildEnglish(input: MessageInput): string {
   } else if (input.requestType === 'early_departure') {
     body = `I will be leaving early today due to ${reason}.\nI expect to leave at around ${input.timeFrom}.`;
   } else if (input.requestType === 'absence') {
-    const leaveMap: Record<string, string> = { paid: 'paid leave', unpaid: 'unpaid leave', substitute: 'substitute holiday', special: 'special leave' };
+    const leaveMap: Record<string, string> = {
+      paid: 'paid leave', unpaid: 'unpaid leave', substitute: 'substitute holiday', special: 'special leave',
+    };
     const leaveStr = input.leaveType ? ` (${leaveMap[input.leaveType]})` : '';
     body = `I will be absent on ${dateStr}${leaveStr} due to ${reason}.`;
+  } else if (input.requestType === 'chokko') {
+    body = reason
+      ? `I will be going directly to the client on ${dateStr} due to ${reason}.`
+      : `I will be going directly to the client on ${dateStr}.`;
+  } else if (input.requestType === 'chokki') {
+    body = reason
+      ? `I will be going directly home from the client on ${dateStr} due to ${reason}.`
+      : `I will be going directly home from the client on ${dateStr}.`;
+  } else if (input.requestType === 'kyujitsu_shukkin') {
+    body = reason
+      ? `I will be working on ${dateStr} (holiday) due to ${reason}.`
+      : `I will be working on ${dateStr} (holiday).`;
   } else {
     body = `I will be going home directly from a client meeting on ${dateStr}.`;
   }
@@ -123,17 +157,23 @@ export function generateMessage(input: MessageInput): MessageOutput {
 }
 
 const requestTypeJa: Record<string, string> = {
-  late: '遅刻',
-  early_departure: '早退',
-  absence: '欠勤',
-  other_request: 'その他',
+  late:             '遅刻',
+  early_departure:  '早退',
+  absence:          '欠勤',
+  other_request:    'その他',
+  chokko:           '直行',
+  chokki:           '直帰',
+  kyujitsu_shukkin: '休日出勤',
 };
 
 const requestTypeEn: Record<string, string> = {
-  late: 'Late Arrival',
-  early_departure: 'Early Departure',
-  absence: 'Absence',
-  other_request: 'Other Request',
+  late:             'Late Arrival',
+  early_departure:  'Early Departure',
+  absence:          'Absence',
+  other_request:    'Other Request',
+  chokko:           'Going Directly to Client (Chokko)',
+  chokki:           'Going Directly Home (Chokki)',
+  kyujitsu_shukkin: 'Holiday Work (Kyujitsu Shukkin)',
 };
 
 export function generateApprovalNotification(input: NotificationInput): MessageOutput {
@@ -201,9 +241,7 @@ export function generateRejectionNotification(input: RejectionNotificationInput)
     '',
     '申し訳ありませんが、ご申請の内容を承認することができませんでした。',
   ];
-  if (input.rejectionReason) {
-    jaLines.push('', `理由：${input.rejectionReason}`);
-  }
+  if (input.rejectionReason) jaLines.push('', `理由：${input.rejectionReason}`);
   jaLines.push('', '詳細については、担当者にお問い合わせください。');
 
   const enLines = [
@@ -216,13 +254,8 @@ export function generateRejectionNotification(input: RejectionNotificationInput)
     '',
     'We regret to inform you that your attendance request has not been approved.',
   ];
-  if (input.rejectionReason) {
-    enLines.push('', `Reason: ${input.rejectionReason}`);
-  }
+  if (input.rejectionReason) enLines.push('', `Reason: ${input.rejectionReason}`);
   enLines.push('', 'Please contact your manager for further details.');
 
-  return {
-    japanese: jaLines.join('\n'),
-    english: enLines.join('\n'),
-  };
+  return { japanese: jaLines.join('\n'), english: enLines.join('\n') };
 }
