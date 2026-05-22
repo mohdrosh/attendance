@@ -1,9 +1,12 @@
 export type UserRole = 'applicant' | 'admin';
-export type RequestType = 'late' | 'early_departure' | 'absence' | 'other_request';
+export type RequestType =
+  | 'late' | 'early_departure' | 'absence' | 'other_request'
+  | 'chokko' | 'chokki' | 'kyujitsu_shukkin';
+
 export type ReasonCategory =
-  | 'illness' | 'train_delay' | 'oversleeping' | 'personal' | 'other'
-  | 'child_dropoff' | 'work_appointment' | 'other_appointment' | 'direct_home';
-export type LeaveType = 'paid' | 'unpaid' | 'substitute' | 'other';
+  | 'illness' | 'family' | 'personal' | 'weather_transport' | 'other';
+
+export type LeaveType = 'paid' | 'unpaid' | 'substitute' | 'special';
 export type RequestStatus = 'pending' | 'approved' | 'rejected';
 export type InputLanguage = 'ja' | 'en';
 
@@ -66,7 +69,7 @@ export interface Request {
 
 export interface MessageInput {
   requestType: RequestType;
-  reasonCategory: ReasonCategory;
+  reasonCategory?: ReasonCategory;   // optional — new types don't require a reason
   reasonDetail?: string;
   trainLineName?: string;
   startDate: string;

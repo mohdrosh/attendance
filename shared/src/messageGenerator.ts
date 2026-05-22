@@ -26,46 +26,34 @@ const subjectEn: Record<string, string> = {
 
 function reasonBodyJa(input: MessageInput): string {
   switch (input.reasonCategory) {
-    case 'train_delay':
-      return `電車遅延（${input.trainLineName ?? ''}）のため`;
-    case 'oversleeping':
-      return '寝過ごしのため';
-    case 'child_dropoff':
-      return '保育園・学校の送りのため';
     case 'illness':
       return `体調不良${input.reasonDetail ? `（${input.reasonDetail}）` : ''}のため`;
+    case 'family':
+      return `家族の事情${input.reasonDetail ? `（${input.reasonDetail}）` : ''}のため`;
     case 'personal':
       return '私用のため';
-    case 'work_appointment':
-      return '業務上のアポイントのため';
-    case 'other_appointment':
-      return `アポイント${input.reasonDetail ? `（${input.reasonDetail}）` : ''}のため`;
-    case 'direct_home':
-      return '客先から直帰のため';
+    case 'weather_transport':
+      return `交通・天候事情${input.reasonDetail ? `（${input.reasonDetail}）` : ''}のため`;
     case 'other':
       return `${input.reasonDetail ?? 'その他の理由'}のため`;
+    default:
+      return input.reasonDetail ? `${input.reasonDetail}のため` : '';
   }
 }
 
 function reasonBodyEn(input: MessageInput): string {
   switch (input.reasonCategory) {
-    case 'train_delay':
-      return `train delay (${input.trainLineName ?? ''})`;
-    case 'oversleeping':
-      return 'oversleeping';
-    case 'child_dropoff':
-      return 'dropping my child at school/daycare';
     case 'illness':
       return `illness${input.reasonDetail ? ` (${input.reasonDetail})` : ''}`;
+    case 'family':
+      return `family circumstances${input.reasonDetail ? ` (${input.reasonDetail})` : ''}`;
     case 'personal':
       return 'personal reasons';
-    case 'work_appointment':
-      return 'a work-related appointment';
-    case 'other_appointment':
-      return `an appointment${input.reasonDetail ? ` (${input.reasonDetail})` : ''}`;
-    case 'direct_home':
-      return 'going home directly from a client meeting';
+    case 'weather_transport':
+      return `weather/transport issues${input.reasonDetail ? ` (${input.reasonDetail})` : ''}`;
     case 'other':
+      return input.reasonDetail ?? 'other reasons';
+    default:
       return input.reasonDetail ?? 'other reasons';
   }
 }
@@ -85,7 +73,7 @@ function buildJapanese(input: MessageInput): string {
   } else if (input.requestType === 'early_departure') {
     body = `本日、${reason}、\n${input.timeFrom}頃に早退させていただきます。`;
   } else if (input.requestType === 'absence') {
-    const leaveMap: Record<string, string> = { paid: '有給休暇', unpaid: '欠勤', substitute: '振替休日', other: 'その他' };
+    const leaveMap: Record<string, string> = { paid: '有給休暇', unpaid: '欠勤', substitute: '振替休日', special: '特別休暇' };
     const leaveStr = input.leaveType ? `（${leaveMap[input.leaveType]}）` : '';
     body = `${dateStr}${leaveStr}、${reason}お休みをいただきます。`;
   } else {
@@ -113,7 +101,7 @@ function buildEnglish(input: MessageInput): string {
   } else if (input.requestType === 'early_departure') {
     body = `I will be leaving early today due to ${reason}.\nI expect to leave at around ${input.timeFrom}.`;
   } else if (input.requestType === 'absence') {
-    const leaveMap: Record<string, string> = { paid: 'paid leave', unpaid: 'unpaid leave', substitute: 'substitute holiday', other: 'leave' };
+    const leaveMap: Record<string, string> = { paid: 'paid leave', unpaid: 'unpaid leave', substitute: 'substitute holiday', special: 'special leave' };
     const leaveStr = input.leaveType ? ` (${leaveMap[input.leaveType]})` : '';
     body = `I will be absent on ${dateStr}${leaveStr} due to ${reason}.`;
   } else {
