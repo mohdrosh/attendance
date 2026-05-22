@@ -7,35 +7,37 @@ import { Footer } from '../components/Footer';
 import { generateTimeOptions } from '../utils/timeOptions';
 import type { RequestType, ReasonCategory, LeaveType } from '@attendance/shared';
 
+const OPTIONAL_REASON_TYPES: RequestType[] = ['chokko', 'chokki', 'kyujitsu_shukkin', 'other_request'];
+
 const REASONS_BY_TYPE: Record<RequestType, ReasonCategory[]> = {
-  late:            ['train_delay', 'oversleeping', 'child_dropoff', 'other'],
-  early_departure: ['illness', 'work_appointment', 'other_appointment', 'other'],
-  absence:         ['illness', 'personal', 'other'],
-  other_request:   ['direct_home', 'other'],
+  late:             ['illness', 'family', 'personal', 'weather_transport', 'other'],
+  early_departure:  ['illness', 'family', 'personal', 'weather_transport', 'other'],
+  absence:          ['illness', 'family', 'personal', 'weather_transport', 'other'],
+  other_request:    [],
+  chokko:           ['illness', 'family', 'personal', 'weather_transport', 'other'],
+  chokki:           ['illness', 'family', 'personal', 'weather_transport', 'other'],
+  kyujitsu_shukkin: ['illness', 'family', 'personal', 'weather_transport', 'other'],
 };
 
-const NEEDS_DETAIL: ReasonCategory[] = ['illness', 'other_appointment', 'other'];
-// late, early_departure, AND other_request all show time pickers
-const TIME_TYPES: RequestType[] = ['late', 'early_departure', 'other_request'];
-const LEAVE_TYPES: LeaveType[] = ['paid', 'unpaid', 'substitute', 'other'];
+const NEEDS_DETAIL: ReasonCategory[] = ['illness', 'other'];
+const TIME_TYPES: RequestType[] = ['late', 'early_departure', 'other_request', 'chokko', 'chokki', 'kyujitsu_shukkin'];
+const LEAVE_TYPES: LeaveType[] = ['paid', 'unpaid', 'substitute', 'special'];
 const TIME_OPTIONS = generateTimeOptions();
 const today = new Date().toISOString().split('T')[0];
 
 const DETAIL_PLACEHOLDERS: Partial<Record<ReasonCategory, { ja: string; en: string }>> = {
-  train_delay:       { ja: '例：JR線の遅延証明書を添付します', en: 'e.g., Attaching train delay certificate from JR Line' },
-  illness:           { ja: '例：内科を受診しました', en: 'e.g., Visited internal medicine clinic' },
-  other_appointment: { ja: '例：歯科受診のため', en: 'e.g., Dental appointment' },
-  other:             { ja: '例：詳細を記入してください', en: 'e.g., Please describe the reason in detail' },
+  illness: { ja: '例：内科を受診しました', en: 'e.g., Visited internal medicine clinic' },
+  other:   { ja: '例：詳細を記入してください', en: 'e.g., Please describe the reason in detail' },
 };
 
 const ADMIN_MSG_PLACEHOLDERS: Record<RequestType, { ja: string; en: string }> = {
-  late:            { ja: '任意：管理者へのコメント', en: 'Optional: note to admin' },
-  early_departure: { ja: '任意：管理者へのコメント', en: 'Optional: note to admin' },
-  absence:         { ja: '任意：管理者へのコメント', en: 'Optional: note to admin' },
-  other_request: {
-    ja: '理由を明確に説明してください。',
-    en: 'Please explain the reason clearly.',
-  },
+  late:             { ja: '任意：管理者へのコメント', en: 'Optional: note to admin' },
+  early_departure:  { ja: '任意：管理者へのコメント', en: 'Optional: note to admin' },
+  absence:          { ja: '任意：管理者へのコメント', en: 'Optional: note to admin' },
+  other_request:    { ja: '理由を明確に説明してください。', en: 'Please explain the reason clearly.' },
+  chokko:           { ja: '任意：管理者へのコメント', en: 'Optional: note to admin' },
+  chokki:           { ja: '任意：管理者へのコメント', en: 'Optional: note to admin' },
+  kyujitsu_shukkin: { ja: '任意：管理者へのコメント', en: 'Optional: note to admin' },
 };
 
 const inputStyle = {
@@ -104,22 +106,23 @@ export function RequestFormPage() {
   const reasons = REASONS_BY_TYPE[form.requestType];
   const showTime = TIME_TYPES.includes(form.requestType);
   const showDetail = form.reasonCategory !== '' && NEEDS_DETAIL.includes(form.reasonCategory as ReasonCategory);
-  const showTrainLine = form.reasonCategory === 'train_delay';
   const showLeaveType = form.requestType === 'absence';
   const showEndDate = form.requestType === 'absence';
   const isOtherRequest = form.requestType === 'other_request';
+  const hasOptionalReason = OPTIONAL_REASON_TYPES.includes(form.requestType);
 
-  // Mandatory field flags per type
-  const reasonRequired = !isOtherRequest;
+  const reasonRequired = !hasOptionalReason;
   const endDateRequired = showEndDate;
   const adminMessageRequired = isOtherRequest;
 
   const isValid = isOtherRequest
     ? form.adminMessage.trim() !== ''
-    : form.reasonCategory !== '' &&
-      (!showLeaveType || form.leaveType !== '') &&
-      (!showDetail || form.reasonDetail.trim() !== '') &&
-      (!showEndDate || form.endDate !== '');
+    : hasOptionalReason
+      ? true
+      : form.reasonCategory !== '' &&
+        (!showLeaveType || form.leaveType !== '') &&
+        (!showDetail || form.reasonDetail.trim() !== '') &&
+        (!showEndDate || form.endDate !== '');
 
   function handleNext() {
     if (!isValid || !user) return;
@@ -149,7 +152,7 @@ export function RequestFormPage() {
           <div>
             <Label htmlFor="requestType" required>{t('form.request_type')}</Label>
             <select id="requestType" value={form.requestType} onChange={e => handleTypeChange(e.target.value as RequestType)} style={inputStyle}>
-              {(['late', 'early_departure', 'absence', 'other_request'] as RequestType[]).map(type => (
+              {(['late', 'early_departure', 'absence', 'chokko', 'chokki', 'kyujitsu_shukkin', 'other_request'] as RequestType[]).map(type => (
                 <option key={type} value={type}>{t(`request_type.${type}`)}</option>
               ))}
             </select>
@@ -187,25 +190,14 @@ export function RequestFormPage() {
             </div>
           )}
 
-          {/* Reason */}
-          <div>
-            <Label htmlFor="reasonCategory" required={reasonRequired}>{t('form.reason')}</Label>
-            <select id="reasonCategory" value={form.reasonCategory} onChange={e => set('reasonCategory', e.target.value as ReasonCategory)} style={inputStyle}>
-              <option value="">--</option>
-              {reasons.map(r => (
-                <option key={r} value={r}>{t(`form.reasons.${r}`)}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Train line */}
-          {showTrainLine && (
+          {/* Reason — hidden for other_request which has no reason list */}
+          {reasons.length > 0 && (
             <div>
-              <Label htmlFor="trainLine">{t('form.train_line')}</Label>
-              <select id="trainLine" value={form.trainLineId} onChange={e => set('trainLineId', e.target.value)} style={inputStyle}>
+              <Label htmlFor="reasonCategory" required={reasonRequired}>{t('form.reason')}</Label>
+              <select id="reasonCategory" value={form.reasonCategory} onChange={e => set('reasonCategory', e.target.value as ReasonCategory)} style={inputStyle}>
                 <option value="">--</option>
-                {user?.trainLines.map(l => (
-                  <option key={l.id} value={l.id}>{isJa ? l.line_name_ja : l.line_name_en}</option>
+                {reasons.map(r => (
+                  <option key={r} value={r}>{t(`form.reasons.${r}`)}</option>
                 ))}
               </select>
             </div>
