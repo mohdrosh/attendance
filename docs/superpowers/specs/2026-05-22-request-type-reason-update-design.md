@@ -232,37 +232,107 @@ Request type dropdown renders all 7 types in this order:
 
 ## 6. Backend (`server/src/routes/requests.ts`)
 
-- Validation logic that checks `request_type` and `reason_category` values must accept all new enum values.
-- `reason_category` is optional for `chokko`, `chokki`, `kyujitsu_shukkin` (same rule as `other_request`).
-- `leave_type` is only applicable for `absence`.
+### Validation fix
+The optional-reason check currently reads:
+```ts
+if (requestType !== 'other_request' && !reasonCategory)
+```
+Must be updated to exempt all new types:
+```ts
+const OPTIONAL_REASON_TYPES = ['other_request', 'chokko', 'chokki', 'kyujitsu_shukkin'];
+if (!OPTIONAL_REASON_TYPES.includes(requestType) && !reasonCategory)
+```
+
+### Email subject map fix
+The `subjects` inline record used to build manager notification subjects:
+```ts
+const subjects: Record<string, string> = {
+  late: '【遅刻連絡】', early_departure: '【早退連絡】',
+  absence: '【欠勤連絡】', other_request: '【その他連絡】',
+};
+```
+Must add the 3 new types — otherwise `subjects[requestType]` is `undefined` and the email subject is malformed:
+```ts
+const subjects: Record<string, string> = {
+  late: '【遅刻連絡】', early_departure: '【早退連絡】',
+  absence: '【欠勤連絡】', other_request: '【その他連絡】',
+  chokko: '【直行連絡】', chokki: '【直帰連絡】',
+  kyujitsu_shukkin: '【休日出勤連絡】',
+};
+```
 
 No schema changes to queries — the DB enum changes handle constraint enforcement.
 
 ---
 
-## 7. Admin & Dashboard Pages
+## 7. Email Notification System (all three paths)
+
+There are three distinct email notification paths. Each must handle all 7 request types without producing `undefined`.
+
+### Path 1 — Manager notification on submit (`requests.ts` → `generateMessage`)
+
+**Trigger:** Employee submits a request.  
+**Changes needed:**
+- `subjectJa` and `subjectEn` records in `messageGenerator.ts` — add 3 new entries (already covered in Section 3 message templates above).
+- `buildJapanese` / `buildEnglish` functions — add `else if` branches for `chokko`, `chokki`, `kyujitsu_shukkin`.
+- `reasonBodyJa` / `reasonBodyEn` switch statements — replace old cases with 5 new reason cases (`illness`, `family`, `personal`, `weather_transport`, `other`).
+- `subjects` inline map in `requests.ts` — add 3 new entries (covered in Section 6 above).
+
+### Path 2 — Employee approval notification (`admin.ts` → `generateApprovalNotification`)
+
+**Trigger:** Admin approves a request and ticks "send notification".  
+**Changes needed:**
+- `requestTypeJa` record in `messageGenerator.ts` currently only has 4 entries. Add:
+  ```ts
+  chokko: '直行', chokki: '直帰', kyujitsu_shukkin: '休日出勤'
+  ```
+- `requestTypeEn` record — add:
+  ```ts
+  chokko: 'Going Directly to Client (Chokko)',
+  chokki: 'Going Directly Home (Chokki)',
+  kyujitsu_shukkin: 'Holiday Work (Kyujitsu Shukkin)'
+  ```
+
+### Path 3 — Employee rejection notification (`admin.ts` → `generateRejectionNotification`)
+
+**Trigger:** Admin rejects a request and ticks "send notification".  
+**Changes needed:** Same `requestTypeJa` / `requestTypeEn` records as Path 2 — no additional changes beyond what Path 2 requires.
+
+### Coverage matrix
+
+| Path | File | Record/Function | New types covered? |
+|---|---|---|---|
+| Submit → manager | `messageGenerator.ts` | `subjectJa`, `subjectEn` | Must add 3 |
+| Submit → manager | `messageGenerator.ts` | `buildJapanese`, `buildEnglish` | Must add 3 branches |
+| Submit → manager | `messageGenerator.ts` | `reasonBodyJa`, `reasonBodyEn` | Replace 9 cases → 5 |
+| Submit → manager | `requests.ts` | `subjects` inline map | Must add 3 |
+| Approve → employee | `messageGenerator.ts` | `requestTypeJa`, `requestTypeEn` | Must add 3 |
+| Reject → employee | `messageGenerator.ts` | `requestTypeJa`, `requestTypeEn` | Same as above |
+
+---
+
+## 8. Admin & Dashboard Pages
 
 - Type filter dropdowns in `AdminPage.tsx` and `DashboardPage.tsx` pull labels from `t('request_type.*')`, so they pick up new types automatically via i18n.
 - No code changes needed in those pages — new keys in translation files are sufficient.
 
 ---
 
-## 8. Files Changed (summary)
+## 9. Files Changed (summary)
 
 | File | Change |
 |---|---|
-| `server/src/db/migrations/003_update_enums.sql` | New migration |
+| `server/src/db/migrations/003_update_enums.sql` | New migration — drop/recreate enums, migrate data |
 | `shared/src/types.ts` | Updated union types |
-| `shared/src/messageGenerator.ts` | New subjects, bodies, reason/leave maps |
+| `shared/src/messageGenerator.ts` | New subjects, body branches, reason/leave maps, requestType maps |
 | `client/src/pages/RequestFormPage.tsx` | New types, reasons, validation, dropdown order |
 | `client/src/locales/ja.json` | New keys for types, reasons, leave types |
 | `client/src/locales/en.json` | New keys with English translations |
-| `server/src/routes/requests.ts` | Accept new enum values in validation |
+| `server/src/routes/requests.ts` | Optional-reason exemption list + subjects map |
 
 ---
 
 ## Out of Scope
 
 - No changes to admin create/edit employee flow
-- No changes to email notification templates beyond what messageGenerator already handles
 - No changes to attachment, auth, or refresh token logic
