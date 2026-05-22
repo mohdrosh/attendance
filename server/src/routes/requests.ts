@@ -7,6 +7,7 @@ import { requireRole } from '../middleware/roleMiddleware';
 import { createRequest, createAttachment, getRequestsByEmployee } from '../db/queries/requests';
 import { getManagersByEmployeeId, getUserWithTrainLines } from '../db/queries/users';
 import { generateMessage } from '@attendance/shared';
+import type { RequestType } from '@attendance/shared';
 import { emailService } from '../services/email/NodemailerService';
 import { AppError } from '../middleware/errorHandler';
 import { pool } from '../db/pool';
@@ -93,7 +94,7 @@ requestRouter.post('/', upload.single('file'), async (req: AuthRequest, res: Res
       };
       const { japanese, english } = generateMessage(msgInput);
       const body = english ? `[English]\n${english}\n\n[日本語]\n${japanese}` : japanese;
-      const subjects: Record<string, string> = {
+      const subjects: Partial<Record<RequestType, string>> = {
         late:             '【遅刻連絡】',
         early_departure:  '【早退連絡】',
         absence:          '【欠勤連絡】',
@@ -104,7 +105,7 @@ requestRouter.post('/', upload.single('file'), async (req: AuthRequest, res: Res
       };
       emailService.send({
         to: [selectedManager.email],
-        subject: `${subjects[requestType]}${user.name_ja} ${startDate}`,
+        subject: `${subjects[requestType as RequestType]}${user.name_ja} ${startDate}`,
         body,
       }).catch(err => console.error('[email] manager notification failed:', err?.message));
     }

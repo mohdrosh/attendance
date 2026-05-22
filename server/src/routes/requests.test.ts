@@ -154,4 +154,15 @@ describe('POST /api/requests', () => {
     expect(res.status).toBe(201);
     expect(res.body.id).toBeDefined();
   });
+
+  it('creates a chokki request without reasonCategory', async () => {
+    const res = await request(app)
+      .post('/api/requests')
+      .set('Authorization', `Bearer ${token}`)
+      .field('requestType', 'chokki')
+      .field('startDate', '2024-01-15')
+      .field('inputLanguage', 'ja');
+    expect(res.status).toBe(201);
+    expect(res.body.id).toBeDefined();
+  });
 });
