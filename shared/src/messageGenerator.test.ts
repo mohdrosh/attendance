@@ -407,4 +407,16 @@ describe('generateRejectionNotification', () => {
     expect(result.japanese).toContain('直行');
     expect(result.english).toContain('Chokko');
   });
+
+  it('shows 直帰 / Chokki for chokki type in rejection', () => {
+    const result = generateRejectionNotification({ ...baseNotif, requestType: 'chokki' });
+    expect(result.japanese).toContain('直帰');
+    expect(result.english).toContain('Chokki');
+  });
+
+  it('shows 休日出勤 / Kyujitsu Shukkin for kyujitsu_shukkin type in rejection', () => {
+    const result = generateRejectionNotification({ ...baseNotif, requestType: 'kyujitsu_shukkin' });
+    expect(result.japanese).toContain('休日出勤');
+    expect(result.english).toContain('Kyujitsu Shukkin');
+  });
 });
