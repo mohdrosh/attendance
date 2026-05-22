@@ -43,7 +43,10 @@
     "late": "Late Arrival",
     "early_departure": "Early Departure",
     "absence": "Absence",
-    "other_request": "Other Request"
+    "other_request": "Other Request",
+    "chokko": "Going Directly to Client (Chokko)",
+    "chokki": "Going Directly Home (Chokki)",
+    "kyujitsu_shukkin": "Holiday Work (Kyujitsu Shukkin)"
   },
   "status": {
     "pending": "Pending",
@@ -66,21 +69,17 @@
     "attach_file": "Attach File (PDF/XLSX, max 3MB)",
     "next": "Review & Confirm",
     "reasons": {
-      "train_delay": "Train Delay",
-      "oversleeping": "Oversleeping",
-      "child_dropoff": "Dropping child at school/daycare",
       "illness": "Illness",
+      "family": "Family Circumstances",
       "personal": "Personal Reasons",
-      "work_appointment": "Work-related appointment",
-      "other_appointment": "Other appointment",
-      "direct_home": "Going home directly from client",
+      "weather_transport": "Weather / Transportation",
       "other": "Other"
     },
     "leave_types": {
       "paid": "Paid Leave",
       "unpaid": "Unpaid Leave",
       "substitute": "Substitute Holiday",
-      "other": "Other"
+      "special": "Special Leave (Wedding/Funeral)"
     }
   },
   "confirm": {

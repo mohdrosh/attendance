@@ -43,7 +43,10 @@
     "late": "遅刻",
     "early_departure": "早退",
     "absence": "欠勤",
-    "other_request": "その他"
+    "other_request": "その他",
+    "chokko": "直行",
+    "chokki": "直帰",
+    "kyujitsu_shukkin": "休日出勤"
   },
   "status": {
     "pending": "承認待ち",
@@ -66,21 +69,17 @@
     "attach_file": "ファイル添付（PDF/XLSX、3MBまで）",
     "next": "確認へ",
     "reasons": {
-      "train_delay": "電車遅延",
-      "oversleeping": "寝過ごし",
-      "child_dropoff": "保育園・学校の送り",
       "illness": "体調不良",
+      "family": "家庭の事情",
       "personal": "私用",
-      "work_appointment": "業務上のアポイント",
-      "other_appointment": "その他アポイント",
-      "direct_home": "客先直帰",
+      "weather_transport": "天候・交通機関",
       "other": "その他"
     },
     "leave_types": {
       "paid": "有給休暇",
       "unpaid": "欠勤",
       "substitute": "振替休日",
-      "other": "その他"
+      "special": "特別休暇（慶弔）"
     }
   },
   "confirm": {
