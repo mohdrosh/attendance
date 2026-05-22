@@ -67,13 +67,19 @@
     "leave_type": "Leave Type",
     "admin_message": "Message to Admin (optional)",
     "attach_file": "Attach File (PDF/XLSX, max 3MB)",
+    "choose_file": "Choose File",
+    "no_file_chosen": "No file chosen",
     "next": "Review & Confirm",
     "reasons": {
       "illness": "Illness",
       "family": "Family Circumstances",
       "personal": "Personal Reasons",
-      "weather_transport": "Weather / Transportation",
-      "other": "Other"
+      "weather_transport": "Weather / Natural Disaster",
+      "other": "Other",
+      "client_meeting": "Client Meeting",
+      "different_office": "Going to a Different Office",
+      "work_event": "Work-Related Event",
+      "substitute_day": "Substitute Working Day"
     },
     "leave_types": {
       "paid": "Paid Leave",

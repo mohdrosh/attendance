@@ -41,6 +41,14 @@ function reasonBodyJa(input: MessageInput): string {
       return '私用のため';
     case 'weather_transport':
       return '天候・交通機関の影響のため';
+    case 'client_meeting':
+      return '顧客との打ち合わせのため';
+    case 'different_office':
+      return '他オフィスへの出勤のため';
+    case 'work_event':
+      return '業務関連イベントのため';
+    case 'substitute_day':
+      return '振替出勤のため';
     case 'other':
       return `${input.reasonDetail ?? 'その他の理由'}のため`;
     default:
@@ -59,6 +67,14 @@ function reasonBodyEn(input: MessageInput): string {
       return 'personal reasons';
     case 'weather_transport':
       return 'weather or transportation issues';
+    case 'client_meeting':
+      return 'a client meeting';
+    case 'different_office':
+      return 'going to a different office';
+    case 'work_event':
+      return 'a work-related event';
+    case 'substitute_day':
+      return 'a substitute working day';
     case 'other':
       return input.reasonDetail ?? 'other reasons';
     default:

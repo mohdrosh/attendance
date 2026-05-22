@@ -4,7 +4,8 @@ export type RequestType =
   | 'chokko' | 'chokki' | 'kyujitsu_shukkin';
 
 export type ReasonCategory =
-  | 'illness' | 'family' | 'personal' | 'weather_transport' | 'other';
+  | 'illness' | 'family' | 'personal' | 'weather_transport' | 'other'
+  | 'client_meeting' | 'different_office' | 'work_event' | 'substitute_day';
 
 export type LeaveType = 'paid' | 'unpaid' | 'substitute' | 'special';
 export type RequestStatus = 'pending' | 'approved' | 'rejected';

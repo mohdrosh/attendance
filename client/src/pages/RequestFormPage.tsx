@@ -14,13 +14,13 @@ const REASONS_BY_TYPE: Record<RequestType, ReasonCategory[]> = {
   early_departure:  ['illness', 'family', 'personal', 'weather_transport', 'other'],
   absence:          ['illness', 'family', 'personal', 'weather_transport', 'other'],
   other_request:    [],
-  chokko:           ['illness', 'family', 'personal', 'weather_transport', 'other'],
-  chokki:           ['illness', 'family', 'personal', 'weather_transport', 'other'],
-  kyujitsu_shukkin: ['illness', 'family', 'personal', 'weather_transport', 'other'],
+  chokko:           ['client_meeting', 'different_office', 'work_event', 'other'],
+  chokki:           ['client_meeting', 'work_event', 'other'],
+  kyujitsu_shukkin: ['substitute_day', 'client_meeting', 'other'],
 };
 
 const NEEDS_DETAIL: ReasonCategory[] = ['illness', 'other'];
-const TIME_TYPES: RequestType[] = ['late', 'early_departure', 'other_request', 'chokko', 'chokki', 'kyujitsu_shukkin'];
+const TIME_TYPES: RequestType[] = ['late', 'early_departure', 'other_request', 'kyujitsu_shukkin'];
 const LEAVE_TYPES: LeaveType[] = ['paid', 'unpaid', 'substitute', 'special'];
 const TIME_OPTIONS = generateTimeOptions();
 const today = new Date().toISOString().split('T')[0];
@@ -254,7 +254,27 @@ export function RequestFormPage() {
                 >✕</button>
               </div>
             ) : (
-              <input key={fileInputKey} type="file" accept=".pdf,.xlsx" onChange={handleFileChange} style={{ fontSize: '0.88em' }} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <label
+                  htmlFor={`file-upload-${fileInputKey}`}
+                  style={{
+                    padding: '5px 12px', background: '#f3f4f6', border: '1px solid #d1d5db',
+                    borderRadius: '6px', cursor: 'pointer', fontSize: '0.88em', fontWeight: 500,
+                    color: '#374151', whiteSpace: 'nowrap' as const,
+                  }}
+                >
+                  {t('form.choose_file')}
+                </label>
+                <span style={{ fontSize: '0.88em', color: '#9ca3af' }}>{t('form.no_file_chosen')}</span>
+                <input
+                  id={`file-upload-${fileInputKey}`}
+                  key={fileInputKey}
+                  type="file"
+                  accept=".pdf,.xlsx"
+                  onChange={handleFileChange}
+                  style={{ display: 'none' }}
+                />
+              </div>
             )}
             {form.fileError && <p style={{ color: '#dc2626', fontSize: '0.82em', marginTop: '6px' }}>{form.fileError}</p>}
           </div>
