@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ---
 
-## Current Status — as of 2026-05-21
+## Current Status — as of 2026-05-22
 
 **MVP is fully implemented and deployed.** The app is live on Railway and functional end-to-end: login, request submission, admin approval/rejection, bilingual email notifications, file attachments.
 
@@ -14,10 +14,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Complete backend API (auth, requests, admin, attachments, email)
 - Complete React frontend with all pages and components
 - Bilingual UI (Japanese default, English toggle) — i18next
-- All tests passing: 13 shared + 45 backend + 3 frontend
+- All tests passing: 41 shared + 48 backend + 3 frontend
 - UI/UX iteration: hamburger nav, dropdowns, dashboards, footer, status badges, filters
 - Deployed to Railway (Nixpacks builder, static client served by Express in production)
 - Email notifications working via Brevo HTTP API (Railway blocks SMTP port 587)
+- 7 request types: late, early_departure, absence, other_request, chokko (直行), chokki (直帰), kyujitsu_shukkin (休日出勤)
+- Simplified 5-reason list shared across all types; special (特別休暇（慶弔）) leave type added
 
 ### Known working credentials (seeded)
 | Role | Employee No. | Password |
@@ -146,6 +148,7 @@ attendance-system/
 │       │   ├── migrations/
 │       │   │   ├── 001_initial_schema.sql       # Full schema with enums, tables, indexes
 │       │   │   └── 002_nullable_reason_category.sql  # Makes reason_category nullable (other_request has no required reason)
+│   │   │   └── 003_update_enums.sql         # Replaces request_type/reason_category/leave_type enums; adds 3 new request types
 │       │   └── queries/
 │       │       ├── users.ts          # getUserByEmployeeNumber, getManagersByEmployeeId, etc.
 │       │       ├── requests.ts       # createRequest, getUserRequests, getRequestById
@@ -246,15 +249,19 @@ In production (`NODE_ENV=production`), `server/src/app.ts` serves the React buil
 
 | Request Type | Date | From/To | End Date | Reason | Leave Type | Admin Message |
 |---|---|---|---|---|---|---|
-| Late Arrival | `*` | `*` | — | `*` | — | optional |
-| Early Departure | `*` | `*` | — | `*` | — | optional |
-| Absence | `*` | — | `*` | `*` | `*` | optional |
-| Other Request | `*` | optional | — | optional | — | `*` |
+| Late Arrival (遅刻) | `*` | `*` | — | `*` | — | optional |
+| Early Departure (早退) | `*` | `*` | — | `*` | — | optional |
+| Absence (欠勤) | `*` | — | `*` | `*` | `*` | optional |
+| Other Request (その他) | `*` | optional | — | — | — | `*` |
+| Chokko (直行) | `*` | optional | — | optional | — | optional |
+| Chokki (直帰) | `*` | optional | — | optional | — | optional |
+| Kyujitsu Shukkin (休日出勤) | `*` | optional | — | optional | — | optional |
 
 - `*` = mandatory (shows asterisk, blocks Next button if empty)
 - Other Request is the only type where admin message is mandatory
-- Reason detail textarea appears only when `reasonCategory` is in `NEEDS_DETAIL`: `['illness', 'other_appointment', 'other']`
-- Train line picker appears only when `reasonCategory === 'train_delay'`
+- Chokko, Chokki, Kyujitsu Shukkin: all fields optional — form is always valid once date is set
+- Reason detail textarea appears only when `reasonCategory` is in `NEEDS_DETAIL`: `['illness', 'other']`
+- No train line picker — train line functionality removed
 
 ---
 
@@ -348,7 +355,6 @@ cd .. && npm run dev
 | Item | Notes |
 |---|---|
 | **Admin: create/edit employees** | No UI to add employees or assign managers. Must be done via seed script or direct SQL. |
-| **Admin: register train lines** | Train lines must be inserted directly into DB. No admin UI. |
 | **Password reset** | No forgot-password flow. Future: email OTP. |
 | **CSV import** | No bulk employee import. Future feature. |
 | **Working hours constraints** | `work_start`/`work_end` columns exist on `users` table but time picker shows full range. Constraints TBD. |
@@ -367,11 +373,31 @@ cd .. && npm run dev
 
 ## Reason Matrix
 
-`reason_category` enum values: `illness`, `train_delay`, `oversleeping`, `personal`, `other`, `child_dropoff`, `work_appointment`, `other_appointment`, `direct_home`
+`reason_category` enum values: `illness`, `family`, `personal`, `weather_transport`, `other`
 
-| Request Type | Available reasons |
-|---|---|
-| Late Arrival | train_delay, oversleeping, child_dropoff, other |
-| Early Departure | illness, work_appointment, other_appointment, other |
-| Absence | illness, personal, other |
-| Other Request | direct_home, other (optional) |
+All request types that show a reason picker share the same 5-reason list. `other_request` has no reason picker.
+
+| Request Type | Available reasons | Required? |
+|---|---|---|
+| Late Arrival | illness, family, personal, weather_transport, other | Yes |
+| Early Departure | illness, family, personal, weather_transport, other | Yes |
+| Absence | illness, family, personal, weather_transport, other | Yes |
+| Other Request | — | — |
+| Chokko | illness, family, personal, weather_transport, other | No |
+| Chokki | illness, family, personal, weather_transport, other | No |
+| Kyujitsu Shukkin | illness, family, personal, weather_transport, other | No |
+
+`NEEDS_DETAIL` (shows reason detail textarea): `['illness', 'other']`
+
+### Leave types
+
+`leave_type` enum values: `paid`, `unpaid`, `substitute`, `special`
+
+| Value | Japanese | English |
+|---|---|---|
+| `paid` | 有給休暇 | Paid Leave |
+| `unpaid` | 欠勤 | Unpaid Leave |
+| `substitute` | 振替休日 | Substitute Holiday |
+| `special` | 特別休暇（慶弔） | Special Leave (Wedding/Funeral) |
+
+Leave type is only shown for `absence` requests.
