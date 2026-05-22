@@ -45,7 +45,8 @@ requestRouter.post('/', upload.single('file'), async (req: AuthRequest, res: Res
     if (!requestType || !startDate || !inputLanguage) {
       throw new AppError(400, 'Missing required fields');
     }
-    if (requestType !== 'other_request' && !reasonCategory) {
+    const OPTIONAL_REASON_TYPES = ['other_request', 'chokko', 'chokki', 'kyujitsu_shukkin'];
+    if (!OPTIONAL_REASON_TYPES.includes(requestType) && !reasonCategory) {
       throw new AppError(400, 'Missing required fields');
     }
 
@@ -93,8 +94,13 @@ requestRouter.post('/', upload.single('file'), async (req: AuthRequest, res: Res
       const { japanese, english } = generateMessage(msgInput);
       const body = english ? `[English]\n${english}\n\n[日本語]\n${japanese}` : japanese;
       const subjects: Record<string, string> = {
-        late: '【遅刻連絡】', early_departure: '【早退連絡】',
-        absence: '【欠勤連絡】', other_request: '【その他連絡】',
+        late:             '【遅刻連絡】',
+        early_departure:  '【早退連絡】',
+        absence:          '【欠勤連絡】',
+        other_request:    '【その他連絡】',
+        chokko:           '【直行連絡】',
+        chokki:           '【直帰連絡】',
+        kyujitsu_shukkin: '【休日出勤連絡】',
       };
       emailService.send({
         to: [selectedManager.email],

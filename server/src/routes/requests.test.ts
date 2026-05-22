@@ -47,7 +47,7 @@ describe('POST /api/requests', () => {
       .field('startDate', '2024-01-15')
       .field('timeFrom', '09:00')
       .field('timeTo', '10:00')
-      .field('reasonCategory', 'oversleeping')
+      .field('reasonCategory', 'weather_transport')
       .field('inputLanguage', 'ja');
 
     expect(res.status).toBe(201);
@@ -83,7 +83,7 @@ describe('POST /api/requests', () => {
       .set('Authorization', `Bearer ${adminLogin.body.accessToken}`)
       .field('requestType', 'late')
       .field('startDate', '2024-01-15')
-      .field('reasonCategory', 'oversleeping')
+      .field('reasonCategory', 'weather_transport')
       .field('inputLanguage', 'ja');
     expect(res.status).toBe(403);
   });
@@ -109,7 +109,7 @@ describe('POST /api/requests', () => {
       .set('Authorization', `Bearer ${token}`)
       .field('requestType', 'late')
       .field('startDate', '2024-01-15')
-      .field('reasonCategory', 'oversleeping')
+      .field('reasonCategory', 'weather_transport')
       .field('inputLanguage', 'ja')
       .field('managerId', manager.id);
 
@@ -127,9 +127,31 @@ describe('POST /api/requests', () => {
       .set('Authorization', `Bearer ${token}`)
       .field('requestType', 'late')
       .field('startDate', '2024-01-15')
-      .field('reasonCategory', 'oversleeping')
+      .field('reasonCategory', 'weather_transport')
       .field('inputLanguage', 'ja');
 
     expect(emailService.send).not.toHaveBeenCalled();
+  });
+
+  it('creates a chokko request without reasonCategory', async () => {
+    const res = await request(app)
+      .post('/api/requests')
+      .set('Authorization', `Bearer ${token}`)
+      .field('requestType', 'chokko')
+      .field('startDate', '2024-01-15')
+      .field('inputLanguage', 'ja');
+    expect(res.status).toBe(201);
+    expect(res.body.id).toBeDefined();
+  });
+
+  it('creates a kyujitsu_shukkin request without reasonCategory', async () => {
+    const res = await request(app)
+      .post('/api/requests')
+      .set('Authorization', `Bearer ${token}`)
+      .field('requestType', 'kyujitsu_shukkin')
+      .field('startDate', '2024-01-15')
+      .field('inputLanguage', 'ja');
+    expect(res.status).toBe(201);
+    expect(res.body.id).toBeDefined();
   });
 });

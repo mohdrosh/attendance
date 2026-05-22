@@ -39,7 +39,7 @@ beforeEach(async () => {
     .set('Authorization', `Bearer ${employeeToken}`)
     .field('requestType', 'late')
     .field('startDate', '2024-01-15')
-    .field('reasonCategory', 'oversleeping')
+    .field('reasonCategory', 'weather_transport')
     .field('inputLanguage', 'ja');
   requestId = reqRes.body.id;
 });
