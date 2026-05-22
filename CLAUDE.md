@@ -4,9 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ---
 
-## Current Status — as of 2026-05-20
+## Current Status — as of 2026-05-21
 
-**MVP is fully implemented and running.** All three implementation plans have been executed. The app is functional end-to-end: login, request submission, admin approval/rejection, bilingual email, file attachments. UI has been iterated on significantly post-MVP.
+**MVP is fully implemented and deployed.** The app is live on Railway and functional end-to-end: login, request submission, admin approval/rejection, bilingual email notifications, file attachments.
 
 ### What is done
 - Full monorepo scaffold (npm workspaces: `shared/`, `server/`, `client/`)
@@ -14,8 +14,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Complete backend API (auth, requests, admin, attachments, email)
 - Complete React frontend with all pages and components
 - Bilingual UI (Japanese default, English toggle) — i18next
-- All tests passing: 13 shared + 20 backend + 3 frontend
+- All tests passing: 13 shared + 45 backend + 3 frontend
 - UI/UX iteration: hamburger nav, dropdowns, dashboards, footer, status badges, filters
+- Deployed to Railway (Nixpacks builder, static client served by Express in production)
+- Email notifications working via Brevo HTTP API (Railway blocks SMTP port 587)
 
 ### Known working credentials (seeded)
 | Role | Employee No. | Password |
@@ -76,7 +78,7 @@ Foreign employees at a Japanese company submit attendance requests (late arrival
 | Backend | Node.js + Express (REST API) |
 | Database | PostgreSQL 18 |
 | Auth | JWT — 15-min access token (memory) + 8-hr refresh token (httpOnly cookie) |
-| Email | Nodemailer via `EmailService` interface (swappable) |
+| Email | Brevo HTTP API (production) / Nodemailer SMTP (local dev) — via `EmailService` interface |
 | Repo structure | Monorepo — `client/`, `server/`, `shared/` via npm workspaces |
 | Backend tests | Jest + Supertest against a **real** PostgreSQL test DB (`attendance_test`) |
 | Frontend tests | Vitest + React Testing Library |
@@ -137,12 +139,13 @@ attendance-system/
 │       │   ├── roleMiddleware.ts     # requireRole('admin' | 'applicant')
 │       │   └── errorHandler.ts       # Global Express error handler
 │       ├── db/
-│       │   ├── pool.ts               # pg Pool; switches to test DB when NODE_ENV=test
-│       │   ├── migrate.ts            # Runs SQL migration files
+│       │   ├── pool.ts               # pg Pool; switches to test DB when NODE_ENV=test; DATE type parser returns string not JS Date
+│       │   ├── migrate.ts            # Runs SQL migration files in order, tracks in schema_migrations table
 │       │   ├── seed.ts               # Creates ADMIN-001 + EMP-001 with manager assignment
 │       │   ├── testHelpers.ts        # clearDatabase() for test beforeEach/afterAll
 │       │   ├── migrations/
-│       │   │   └── 001_initial_schema.sql  # Full schema with enums, tables, indexes
+│       │   │   ├── 001_initial_schema.sql       # Full schema with enums, tables, indexes
+│       │   │   └── 002_nullable_reason_category.sql  # Makes reason_category nullable (other_request has no required reason)
 │       │   └── queries/
 │       │       ├── users.ts          # getUserByEmployeeNumber, getManagersByEmployeeId, etc.
 │       │       ├── requests.ts       # createRequest, getUserRequests, getRequestById
@@ -150,7 +153,7 @@ attendance-system/
 │       ├── services/
 │       │   ├── email/
 │       │   │   ├── EmailService.ts   # Interface — send(to, subject, body)
-│       │   │   └── NodemailerService.ts  # Default implementation
+│       │   │   └── NodemailerService.ts  # Exports emailService: Brevo if BREVO_API_KEY set, else Nodemailer
 │       │   └── cleanupJob.ts         # node-cron: daily delete of attachments past expires_at
 │       └── __tests__/
 │           ├── auth.test.ts
@@ -212,6 +215,31 @@ PostgreSQL 18 does not allow `FILTER` on non-aggregate functions. Do not change 
 ### Access token in memory
 `client/src/api/client.ts` stores the access token in a module-level variable — never localStorage (XSS safe). `apiFetch` silently calls `/api/auth/refresh` on 401 and retries once.
 
+### Email service — auto-selects provider
+`server/src/services/email/NodemailerService.ts` exports a single `emailService` instance:
+- **If `BREVO_API_KEY` is set** → uses Brevo HTTP API (`fetch` to `api.brevo.com`) — required for Railway and any cloud host that blocks outbound SMTP
+- **Otherwise** → uses Nodemailer SMTP (local dev with Gmail app password)
+
+**Why Brevo:** Railway hard-blocks all outbound TCP on port 587 (SMTP). All connections show `ICMP_CSUM` in network flow logs. Brevo sends over HTTPS (port 443) which is never blocked.
+
+**Brevo setup:** Sign up free at brevo.com → verify sender email → get API key → set `BREVO_API_KEY` env var. The `SMTP_FROM` value is used as the sender address and must match the verified sender in Brevo.
+
+### Email sends are fire-and-forget
+Both `routes/requests.ts` (manager notification on submit) and `routes/admin.ts` (employee notification on approve/reject) call `emailService.send({...}).catch(...)` **without `await`**. This is intentional — awaiting the send blocked the HTTP response while SMTP was timing out, causing the UI to show "..." indefinitely. Email failures are logged to console but never surface to the user.
+
+### DATE columns return strings
+`server/src/db/pool.ts` registers a custom type parser:
+```ts
+types.setTypeParser(types.builtins.DATE, val => val);
+```
+Without this, node-postgres converts DATE columns to JS `Date` objects, which shift timezone and serialize as ISO timestamps (`2026-05-19T15:00:00.000Z`). The parser returns the raw `YYYY-MM-DD` string instead.
+
+### reason_category is nullable
+`reason_category` was originally `NOT NULL`. Migration `002` drops that constraint. The `other_request` type does not require a reason — the frontend omits the field and the backend skips the validation check for that type. Do not add `NOT NULL` back.
+
+### Production static serving
+In production (`NODE_ENV=production`), `server/src/app.ts` serves the React build from `client/dist/` via `express.static` and catches all unmatched routes with the `index.html` SPA fallback. CORS middleware is disabled in production (same-origin). The `npm run build` step must complete before starting the server.
+
 ---
 
 ## Form Logic (current implementation)
@@ -260,6 +288,33 @@ PostgreSQL 18 does not allow `FILTER` on non-aggregate functions. Do not change 
 
 ---
 
+## Environment Variables
+
+### Local (`.env` in project root — never committed)
+```
+DATABASE_URL=postgres://user@localhost:5432/attendance_dev
+DATABASE_TEST_URL=postgres://user@localhost:5432/attendance_test
+JWT_SECRET=...
+JWT_REFRESH_SECRET=...
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your@gmail.com
+SMTP_PASS=your-gmail-app-password      # 16-char app password from Google account settings
+SMTP_FROM=Attendance System <your@gmail.com>
+PORT=4000
+CLIENT_URL=http://localhost:5173
+```
+
+### Railway (set in Variables tab — no .env file)
+All of the above minus `DATABASE_TEST_URL`, `CLIENT_URL`, `PORT`, plus:
+```
+BREVO_API_KEY=xkeysib-...              # From brevo.com — replaces SMTP for cloud deployment
+NODE_ENV=production
+```
+`SMTP_FROM` must match the verified sender email registered in Brevo.
+
+---
+
 ## Environment Setup (fresh machine)
 
 ```bash
@@ -282,7 +337,7 @@ cd server && npm run seed
 # 6. Start dev servers
 cd .. && npm run dev
 # Server: http://localhost:4000
-# Client: http://localhost:5173
+# Client: http://localhost:5173 (or next available port if 5173 is taken)
 ```
 
 ---
@@ -297,11 +352,13 @@ cd .. && npm run dev
 | **Password reset** | No forgot-password flow. Future: email OTP. |
 | **CSV import** | No bulk employee import. Future feature. |
 | **Working hours constraints** | `work_start`/`work_end` columns exist on `users` table but time picker shows full range. Constraints TBD. |
-| **Email provider swap** | `EmailService` interface is ready. Swap Nodemailer for SendGrid/Resend by implementing the interface. |
 | **Frontend test coverage** | Only LoginPage has tests. DashboardPage, AdminPage, RequestFormPage, ConfirmPage have no tests. |
 | **Mobile responsiveness** | Tables overflow on small screens. No responsive breakpoints implemented. |
 | **Pagination** | Admin table loads all requests — no pagination or infinite scroll. Will degrade with large datasets. |
 | **Notification on approval** | By design: approval sends no email. Rejection sends email to applicant. Revisit if requirements change. |
+
+### Diagnostic endpoint (remove when no longer needed)
+`GET /api/health/email` — tests SMTP/Brevo connectivity and returns `{ ok, error }` as JSON. Added for Railway debugging. Safe to remove from `server/src/app.ts` once email is confirmed stable.
 
 ### ProfilePanel.tsx
 `client/src/components/ProfilePanel.tsx` still exists but is no longer used — its content was merged into the Navbar drawer. Safe to delete.
