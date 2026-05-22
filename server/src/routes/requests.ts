@@ -80,34 +80,32 @@ requestRouter.post('/', upload.single('file'), async (req: AuthRequest, res: Res
 
     const user = await getUserWithTrainLines(req.user!.id);
 
-    if (managerId && user) {
+    if (user) {
       const managers = await getManagersByEmployeeId(req.user!.id);
-      const selectedManager = managers.find(m => m.id === managerId);
-      if (!selectedManager) throw new AppError(400, 'Invalid managerId');
-
-      const trainLine = user.trainLines.find(l => l.id === trainLineId);
-      const msgInput = {
-        requestType, reasonCategory, reasonDetail, trainLineName: trainLine?.line_name_ja,
-        startDate, endDate, timeFrom, timeTo, leaveType, adminMessage,
-        employeeName: { ja: user.name_ja, en: user.name_en },
-        inputLanguage,
-      };
-      const { japanese, english } = generateMessage(msgInput);
-      const body = english ? `[English]\n${english}\n\n[日本語]\n${japanese}` : japanese;
-      const subjects: Partial<Record<RequestType, string>> = {
-        late:             '【遅刻連絡】',
-        early_departure:  '【早退連絡】',
-        absence:          '【欠勤連絡】',
-        other_request:    '【その他連絡】',
-        chokko:           '【直行連絡】',
-        chokki:           '【直帰連絡】',
-        kyujitsu_shukkin: '【休日出勤連絡】',
-      };
-      emailService.send({
-        to: [selectedManager.email],
-        subject: `${subjects[requestType as RequestType]}${user.name_ja} ${startDate}`,
-        body,
-      }).catch(err => console.error('[email] manager notification failed:', err?.message));
+      if (managers.length > 0) {
+        const msgInput = {
+          requestType, reasonCategory, reasonDetail,
+          startDate, endDate, timeFrom, timeTo, leaveType, adminMessage,
+          employeeName: { ja: user.name_ja, en: user.name_en },
+          inputLanguage,
+        };
+        const { japanese, english } = generateMessage(msgInput);
+        const body = english ? `[English]\n${english}\n\n[日本語]\n${japanese}` : japanese;
+        const subjects: Partial<Record<RequestType, string>> = {
+          late:             '【遅刻連絡】',
+          early_departure:  '【早退連絡】',
+          absence:          '【欠勤連絡】',
+          other_request:    '【その他連絡】',
+          chokko:           '【直行連絡】',
+          chokki:           '【直帰連絡】',
+          kyujitsu_shukkin: '【休日出勤連絡】',
+        };
+        const subject = `${subjects[requestType as RequestType]}${user.name_ja} ${startDate}`;
+        for (const manager of managers) {
+          emailService.send({ to: [manager.email], subject, body })
+            .catch(err => console.error('[email] manager notification failed:', err?.message));
+        }
+      }
     }
 
     res.status(201).json({ id: requestId });

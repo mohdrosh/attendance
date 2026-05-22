@@ -98,7 +98,7 @@
     "manager": "Manager",
     "select_manager": "Select manager",
     "submitted_title": "Request Submitted",
-    "submitted_message": "Your attendance request has been sent to your manager, {{name}}.",
+    "submitted_message": "Your attendance request has been sent.",
     "back_to_dashboard": "Back to Dashboard"
   },
   "admin": {

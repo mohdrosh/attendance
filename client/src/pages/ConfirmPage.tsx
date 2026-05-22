@@ -1,32 +1,19 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { generateMessage } from '@attendance/shared';
 import { Navbar } from '../components/Navbar';
 import { Footer } from '../components/Footer';
-import { useToast } from '../context/ToastContext';
 import { apiFetch } from '../api/client';
-import type { Manager } from '@attendance/shared';
 
 export function ConfirmPage() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
-  const { showToast: _showToast } = useToast();
   const { form, user } = location.state ?? {};
 
-  const [managers, setManagers] = useState<Manager[]>([]);
-  const [managerId, setManagerId] = useState('');
   const [sending, setSending] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [submittedManagerName, setSubmittedManagerName] = useState('');
-
-  useEffect(() => {
-    apiFetch('/api/users/me/managers')
-      .then(res => res.ok ? res.json() : [])
-      .then((data: Manager[]) => setManagers(data))
-      .catch(() => {});
-  }, []);
 
   if (!form || !user) {
     navigate('/request/new');
@@ -63,16 +50,10 @@ export function ConfirmPage() {
       if (form.adminMessage) formData.append('adminMessage', form.adminMessage);
       formData.append('inputLanguage', form.inputLanguage);
       if (form.file) formData.append('file', form.file);
-      formData.append('managerId', managerId);
 
       const res = await apiFetch('/api/requests', { method: 'POST', body: formData });
       if (!res.ok) throw new Error('Failed to submit');
 
-      const selectedManager = managers.find(m => m.id === managerId);
-      const displayName = selectedManager
-        ? (i18n.language === 'ja' ? selectedManager.name_ja : selectedManager.name_en)
-        : '';
-      setSubmittedManagerName(displayName);
       setSubmitted(true);
     } finally {
       setSending(false);
@@ -84,7 +65,7 @@ export function ConfirmPage() {
       <div style={{ minHeight: '100vh', background: '#f8fafc', display: 'flex', flexDirection: 'column' }}>
         <Navbar />
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 20px', textAlign: 'center' }}>
-          <p style={{ fontSize: '1.1em', color: '#374151', marginBottom: '28px', maxWidth: '480px' }}>{t('confirm.submitted_message', { name: submittedManagerName })}</p>
+          <p style={{ fontSize: '1.1em', color: '#374151', marginBottom: '28px', maxWidth: '480px' }}>{t('confirm.submitted_message')}</p>
           <button
             onClick={() => navigate('/dashboard')}
             style={{ padding: '11px 28px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, fontSize: '0.95em' }}
@@ -130,20 +111,6 @@ export function ConfirmPage() {
           </div>
         </section>
 
-        <section style={{ marginBottom: '24px', padding: '20px', background: 'white', borderRadius: '12px', boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}>
-          <label style={{ display: 'block', fontSize: '0.85em', fontWeight: 600, color: '#374151', marginBottom: '8px' }}>{t('confirm.manager')} <span style={{ color: '#ef4444' }}>*</span></label>
-          <select
-            value={managerId}
-            onChange={e => setManagerId(e.target.value)}
-            style={{ width: '100%', padding: '9px 12px', fontSize: '0.9em', border: '1px solid #d1d5db', borderRadius: '8px', background: 'white', color: managerId ? '#111' : '#9ca3af', cursor: 'pointer' }}
-          >
-            <option value="" disabled>{t('confirm.select_manager')}</option>
-            {managers.map((m: Manager) => (
-              <option key={m.id} value={m.id}>{m.name_ja} / {m.name_en}</option>
-            ))}
-          </select>
-        </section>
-
         <div style={{ display: 'flex', gap: '12px' }}>
           <button
             onClick={() => navigate('/request/new', { state: { form } })}
@@ -153,8 +120,8 @@ export function ConfirmPage() {
           </button>
           <button
             onClick={handleSend}
-            disabled={sending || managerId === ''}
-            style={{ flex: 1, padding: '11px', background: managerId === '' ? '#93c5fd' : '#3b82f6', color: 'white', border: 'none', borderRadius: '8px', cursor: managerId === '' ? 'not-allowed' : 'pointer', fontWeight: 600, fontSize: '0.95em' }}
+            disabled={sending}
+            style={{ flex: 1, padding: '11px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '8px', cursor: sending ? 'not-allowed' : 'pointer', fontWeight: 600, fontSize: '0.95em' }}
           >
             {sending ? '…' : t('confirm.send')}
           </button>

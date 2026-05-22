@@ -98,7 +98,7 @@
     "manager": "上長",
     "select_manager": "上長を選択してください",
     "submitted_title": "申請完了",
-    "submitted_message": "申請が {{name}} さんに送信されました。",
+    "submitted_message": "申請を送信しました。",
     "back_to_dashboard": "ダッシュボードへ戻る"
   },
   "admin": {
