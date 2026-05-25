@@ -66,6 +66,7 @@ export interface Request {
   reviewed_at: string | null;
   submitted_at: string;
   attachment: Attachment | null;
+  is_read?: boolean;
 }
 
 export interface MessageInput {
@@ -97,9 +98,6 @@ export interface NotificationInput {
   employeeName: { ja: string; en: string };
 }
 
-export interface RejectionNotificationInput extends NotificationInput {
-  rejectionReason?: string;
-}
 
 export type AuditAction =
   | 'created' | 'updated' | 'deactivated' | 'reactivated'
