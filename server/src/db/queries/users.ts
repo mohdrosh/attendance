@@ -3,11 +3,20 @@ import { UserRole, TrainLine, UserProfile } from '@attendance/shared';
 
 export async function findUserByEmployeeNumber(employeeNumber: string) {
   const { rows } = await pool.query(
-    `SELECT id, employee_number, name_ja, name_en, email, password_hash, role
+    `SELECT id, employee_number, name_ja, name_en, email, password_hash, role, is_active
      FROM users WHERE employee_number = $1`,
     [employeeNumber]
   );
-  return rows[0] as { id: string; employee_number: string; name_ja: string; name_en: string; email: string; password_hash: string; role: UserRole } | undefined;
+  return rows[0] as {
+    id: string;
+    employee_number: string;
+    name_ja: string;
+    name_en: string;
+    email: string;
+    password_hash: string;
+    role: UserRole;
+    is_active: boolean;
+  } | undefined;
 }
 
 export async function getUserWithTrainLines(userId: string): Promise<UserProfile | undefined> {
