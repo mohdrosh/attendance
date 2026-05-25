@@ -100,3 +100,40 @@ export interface NotificationInput {
 export interface RejectionNotificationInput extends NotificationInput {
   rejectionReason?: string;
 }
+
+export type AuditAction =
+  | 'created' | 'updated' | 'deactivated' | 'reactivated'
+  | 'deleted' | 'password_reset' | 'manager_assigned' | 'manager_removed';
+
+export interface AuditLogEntry {
+  id: string;
+  action: AuditAction;
+  changes: Record<string, { from: string; to: string }> | null;
+  snapshot: Record<string, string> | null;
+  changed_at: string;
+  changed_by_name_ja: string | null;
+  changed_by_name_en: string | null;
+}
+
+export interface EmployeeListItem {
+  id: string;
+  employee_number: string;
+  name_ja: string;
+  name_en: string;
+  email: string;
+  role: UserRole;
+  is_active: boolean;
+}
+
+export interface EmployeeDetail {
+  id: string;
+  employee_number: string;
+  name_ja: string;
+  name_en: string;
+  email: string;
+  role: UserRole;
+  is_active: boolean;
+  work_start: string | null;
+  work_end: string | null;
+  managers: { id: string; name_ja: string; name_en: string; email: string }[];
+}
