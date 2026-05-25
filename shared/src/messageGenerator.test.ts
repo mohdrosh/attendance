@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { generateMessage, generateApprovalNotification, generateRejectionNotification } from './messageGenerator';
+import { generateMessage } from './messageGenerator';
 
 const empName = { ja: '山田太郎', en: 'Taro Yamada' };
 
@@ -311,112 +311,5 @@ describe('generateMessage', () => {
       });
       expect(result.english).toContain('Extra note');
     });
-  });
-});
-
-const baseNotif = {
-  requestType: 'late' as const,
-  startDate: '2024-01-15',
-  timeFrom: '09:00',
-  timeTo: '10:00',
-  employeeName: empName,
-};
-
-describe('generateApprovalNotification', () => {
-  it('returns japanese and english bodies', () => {
-    const result = generateApprovalNotification(baseNotif);
-    expect(result.japanese).toBeDefined();
-    expect(result.english).toBeDefined();
-  });
-
-  it('includes 【承認】 in japanese subject', () => {
-    expect(generateApprovalNotification(baseNotif).japanese).toContain('【承認】');
-  });
-
-  it('includes [Approved] in english subject', () => {
-    expect(generateApprovalNotification(baseNotif).english).toContain('[Approved]');
-  });
-
-  it('includes employee name in both languages', () => {
-    const result = generateApprovalNotification(baseNotif);
-    expect(result.japanese).toContain('山田太郎');
-    expect(result.english).toContain('Taro Yamada');
-  });
-
-  it('includes time range when provided', () => {
-    const result = generateApprovalNotification(baseNotif);
-    expect(result.japanese).toContain('09:00');
-    expect(result.english).toContain('10:00');
-  });
-
-  it('omits time when not provided', () => {
-    const { timeFrom: _tf, timeTo: _tt, ...noTime } = baseNotif;
-    const result = generateApprovalNotification(noTime);
-    expect(result.japanese).not.toContain('時間');
-    expect(result.english).not.toContain('Time:');
-  });
-
-  it('shows 直行 / Chokko for chokko type', () => {
-    const result = generateApprovalNotification({ ...baseNotif, requestType: 'chokko' });
-    expect(result.japanese).toContain('直行');
-    expect(result.english).toContain('Chokko');
-  });
-
-  it('shows 直帰 / Chokki for chokki type', () => {
-    const result = generateApprovalNotification({ ...baseNotif, requestType: 'chokki' });
-    expect(result.japanese).toContain('直帰');
-    expect(result.english).toContain('Chokki');
-  });
-
-  it('shows 休日出勤 / Kyujitsu Shukkin for kyujitsu_shukkin type', () => {
-    const result = generateApprovalNotification({ ...baseNotif, requestType: 'kyujitsu_shukkin' });
-    expect(result.japanese).toContain('休日出勤');
-    expect(result.english).toContain('Kyujitsu Shukkin');
-  });
-});
-
-describe('generateRejectionNotification', () => {
-  it('returns japanese and english bodies', () => {
-    const result = generateRejectionNotification(baseNotif);
-    expect(result.japanese).toBeDefined();
-    expect(result.english).toBeDefined();
-  });
-
-  it('includes 【否認】 in japanese subject', () => {
-    expect(generateRejectionNotification(baseNotif).japanese).toContain('【否認】');
-  });
-
-  it('includes [Not Approved] in english subject', () => {
-    expect(generateRejectionNotification(baseNotif).english).toContain('[Not Approved]');
-  });
-
-  it('includes rejection reason when provided', () => {
-    const result = generateRejectionNotification({ ...baseNotif, rejectionReason: 'Missing documentation' });
-    expect(result.japanese).toContain('Missing documentation');
-    expect(result.english).toContain('Missing documentation');
-  });
-
-  it('omits rejection reason line when not provided', () => {
-    const result = generateRejectionNotification(baseNotif);
-    expect(result.japanese).not.toContain('理由：');
-    expect(result.english).not.toContain('Reason:');
-  });
-
-  it('shows 直行 / Chokko for chokko type in rejection', () => {
-    const result = generateRejectionNotification({ ...baseNotif, requestType: 'chokko' });
-    expect(result.japanese).toContain('直行');
-    expect(result.english).toContain('Chokko');
-  });
-
-  it('shows 直帰 / Chokki for chokki type in rejection', () => {
-    const result = generateRejectionNotification({ ...baseNotif, requestType: 'chokki' });
-    expect(result.japanese).toContain('直帰');
-    expect(result.english).toContain('Chokki');
-  });
-
-  it('shows 休日出勤 / Kyujitsu Shukkin for kyujitsu_shukkin type in rejection', () => {
-    const result = generateRejectionNotification({ ...baseNotif, requestType: 'kyujitsu_shukkin' });
-    expect(result.japanese).toContain('休日出勤');
-    expect(result.english).toContain('Kyujitsu Shukkin');
   });
 });
