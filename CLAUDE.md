@@ -4,9 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ---
 
-## Current Status — as of 2026-05-22
+## Current Status — as of 2026-05-25
 
-**MVP is fully implemented and deployed.** The app is live on Railway and functional end-to-end: login, request submission, admin approval/rejection, bilingual email notifications, file attachments.
+**MVP + Admin Employee Management fully implemented.** App is live on Railway and functional end-to-end.
 
 ### What is done
 - Full monorepo scaffold (npm workspaces: `shared/`, `server/`, `client/`)
@@ -14,12 +14,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Complete backend API (auth, requests, admin, attachments, email)
 - Complete React frontend with all pages and components
 - Bilingual UI (Japanese default, English toggle) — i18next
-- All tests passing: 41 shared + 48 backend + 3 frontend
+- All tests passing: 70 backend + 3 frontend
 - UI/UX iteration: hamburger nav, dropdowns, dashboards, footer, status badges, filters
 - Deployed to Railway (Nixpacks builder, static client served by Express in production)
 - Email notifications working via Brevo HTTP API (Railway blocks SMTP port 587)
 - 7 request types: late, early_departure, absence, other_request, chokko (直行), chokki (直帰), kyujitsu_shukkin (休日出勤)
 - Simplified 5-reason list shared across all types; special (特別休暇（慶弔）) leave type added
+- **Admin employee management** at `/admin/employees`: create/view/edit/deactivate/reactivate/delete employees, auto-generated temp passwords, manager assignment, complete audit trail
 
 ### Known working credentials (seeded)
 | Role | Employee No. | Password |
@@ -354,11 +355,11 @@ cd .. && npm run dev
 ### Not yet built — known gaps
 | Item | Notes |
 |---|---|
-| **Admin: create/edit employees** | No UI to add employees or assign managers. Must be done via seed script or direct SQL. |
-| **Password reset** | No forgot-password flow. Future: email OTP. |
+| **Password reset (self-service)** | No forgot-password flow for employees. Admin can reset via Employee Management UI. Future: email OTP. |
+| **Email notification on account creation/reset** | Admin must manually share temp password. Deferred per spec. |
 | **CSV import** | No bulk employee import. Future feature. |
-| **Working hours constraints** | `work_start`/`work_end` columns exist on `users` table but time picker shows full range. Constraints TBD. |
-| **Frontend test coverage** | Only LoginPage has tests. DashboardPage, AdminPage, RequestFormPage, ConfirmPage have no tests. |
+| **Working hours constraints** | `work_start`/`work_end` columns editable in Employee Management UI but no enforcement on request form. Constraints TBD. |
+| **Frontend test coverage** | Only LoginPage has tests. DashboardPage, AdminPage, RequestFormPage, ConfirmPage, AdminEmployeesPage have no tests. |
 | **Mobile responsiveness** | Tables overflow on small screens. No responsive breakpoints implemented. |
 | **Pagination** | Admin table loads all requests — no pagination or infinite scroll. Will degrade with large datasets. |
 | **Notification on approval** | By design: approval sends no email. Rejection sends email to applicant. Revisit if requirements change. |
