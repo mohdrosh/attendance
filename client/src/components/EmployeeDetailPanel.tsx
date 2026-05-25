@@ -154,6 +154,7 @@ export function EmployeeDetailPanel({ mode, employeeId, allUsers, onClose, onCre
   async function handleResetPassword() {
     if (!employeeId) return;
     const res = await apiFetch(`/api/admin/employees/${employeeId}/reset-password`, { method: 'POST' });
+    if (!res.ok) return;
     const { tempPassword: tp } = await res.json();
     setTempPassword(tp);
   }
