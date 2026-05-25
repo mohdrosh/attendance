@@ -26,6 +26,8 @@ authRouter.post('/login', async (req: Request, res: Response, next) => {
     const valid = await bcrypt.compare(password, user.password_hash);
     if (!valid) throw new AppError(401, 'Invalid credentials');
 
+    if (!user.is_active) throw new AppError(401, 'account_deactivated');
+
     const profile = await getUserWithTrainLines(user.id);
     const accessToken = generateAccessToken(user.id, user.role);
     const refreshToken = crypto.randomBytes(40).toString('hex');

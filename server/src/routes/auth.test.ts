@@ -89,3 +89,19 @@ describe('POST /api/auth/logout', () => {
     expect(refreshRes.status).toBe(401);
   });
 });
+
+describe('POST /api/auth/login — deactivated account', () => {
+  it('returns 401 with account_deactivated when is_active is false', async () => {
+    const hash = await bcrypt.hash('Test1234!', 10);
+    await pool.query(
+      `INSERT INTO users (employee_number, name_ja, name_en, email, password_hash, role, is_active)
+       VALUES ('DEACT-001', '無効太郎', 'Deactivated User', 'deact@test.com', $1, 'applicant', false)`,
+      [hash]
+    );
+    const res = await request(app)
+      .post('/api/auth/login')
+      .send({ employee_number: 'DEACT-001', password: 'Test1234!' });
+    expect(res.status).toBe(401);
+    expect(res.body.error).toBe('account_deactivated');
+  });
+});
