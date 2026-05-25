@@ -212,7 +212,7 @@ export function EmployeeDetailPanel({ mode, employeeId, allUsers, onClose, onCre
   }
 
   const availableManagers = allUsers.filter(u =>
-    u.id !== employeeId && !employee?.managers.some(m => m.id === u.id)
+    u.role === 'admin' && u.id !== employeeId && !employee?.managers.some(m => m.id === u.id)
   );
 
   const isCreateValid = form.employee_number && form.name_ja && form.name_en && form.email && form.role;
