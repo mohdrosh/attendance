@@ -158,5 +158,56 @@
   },
   "toast": {
     "request_sent": "Request sent. Pending approval."
+  },
+  "employees": {
+    "title": "Employee Management",
+    "add": "Add Employee",
+    "search_placeholder": "Search by name or employee no.",
+    "filter_role": "Role",
+    "filter_status": "Status",
+    "status_active": "Active",
+    "status_deactivated": "Deactivated",
+    "tabs": {
+      "details": "Details",
+      "audit_log": "Audit Log"
+    },
+    "fields": {
+      "employee_number": "Employee Number",
+      "name_ja": "Name (Japanese)",
+      "name_en": "Name (English)",
+      "email": "Email",
+      "role": "Role",
+      "work_start": "Work Start",
+      "work_end": "Work End",
+      "managers": "Managers"
+    },
+    "actions": {
+      "save": "Save Changes",
+      "saved": "Saved",
+      "reset_password": "Reset Password",
+      "deactivate": "Deactivate Account",
+      "reactivate": "Reactivate Account",
+      "delete": "Delete Account",
+      "add_manager": "Add Manager",
+      "remove": "Remove"
+    },
+    "password_modal": {
+      "title": "Temporary Password",
+      "warning": "Share this password with the employee. It will not be shown again.",
+      "copy": "Copy",
+      "done": "Done"
+    },
+    "confirm_deactivate": "Are you sure you want to deactivate this account?",
+    "confirm_delete": "Type \"delete\" to confirm permanent deletion.",
+    "audit": {
+      "created": "Account created",
+      "updated": "Fields updated",
+      "deactivated": "Account deactivated",
+      "reactivated": "Account reactivated",
+      "deleted": "Account deleted",
+      "password_reset": "Password reset",
+      "manager_assigned": "Manager assigned",
+      "manager_removed": "Manager removed"
+    }
   }
 }

@@ -158,5 +158,56 @@
   },
   "toast": {
     "request_sent": "申請を送信しました。承認待ちです。"
+  },
+  "employees": {
+    "title": "社員管理",
+    "add": "社員を追加",
+    "search_placeholder": "名前・社員番号で検索",
+    "filter_role": "役割",
+    "filter_status": "ステータス",
+    "status_active": "有効",
+    "status_deactivated": "無効",
+    "tabs": {
+      "details": "詳細",
+      "audit_log": "変更履歴"
+    },
+    "fields": {
+      "employee_number": "社員番号",
+      "name_ja": "氏名（日本語）",
+      "name_en": "氏名（英語）",
+      "email": "メールアドレス",
+      "role": "役割",
+      "work_start": "勤務開始時間",
+      "work_end": "勤務終了時間",
+      "managers": "上長"
+    },
+    "actions": {
+      "save": "変更を保存",
+      "saved": "保存しました",
+      "reset_password": "パスワードをリセット",
+      "deactivate": "アカウントを無効化",
+      "reactivate": "アカウントを有効化",
+      "delete": "アカウントを削除",
+      "add_manager": "上長を追加",
+      "remove": "削除"
+    },
+    "password_modal": {
+      "title": "仮パスワード",
+      "warning": "このパスワードを社員に共有してください。再表示はできません。",
+      "copy": "コピー",
+      "done": "完了"
+    },
+    "confirm_deactivate": "このアカウントを無効化しますか？",
+    "confirm_delete": "削除を確定するには「delete」と入力してください。",
+    "audit": {
+      "created": "アカウントを作成",
+      "updated": "フィールドを更新",
+      "deactivated": "アカウントを無効化",
+      "reactivated": "アカウントを有効化",
+      "deleted": "アカウントを削除",
+      "password_reset": "パスワードをリセット",
+      "manager_assigned": "上長を追加",
+      "manager_removed": "上長を削除"
+    }
   }
 }
