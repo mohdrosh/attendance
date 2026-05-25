@@ -5,6 +5,7 @@ import { DashboardPage } from './pages/DashboardPage';
 import { RequestFormPage } from './pages/RequestFormPage';
 import { ConfirmPage } from './pages/ConfirmPage';
 import { AdminPage } from './pages/AdminPage';
+import { AdminEmployeesPage } from './pages/AdminEmployeesPage';
 import { useAuth } from './context/AuthContext';
 
 export default function App() {
@@ -16,6 +17,7 @@ export default function App() {
       <Route path="/request/new" element={<ProtectedRoute role="applicant"><RequestFormPage /></ProtectedRoute>} />
       <Route path="/request/confirm" element={<ProtectedRoute role="applicant"><ConfirmPage /></ProtectedRoute>} />
       <Route path="/admin" element={<ProtectedRoute role="admin"><AdminPage /></ProtectedRoute>} />
+      <Route path="/admin/employees" element={<ProtectedRoute role="admin"><AdminEmployeesPage /></ProtectedRoute>} />
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   );
