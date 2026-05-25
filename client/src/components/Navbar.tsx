@@ -171,6 +171,9 @@ export function Navbar() {
           {user?.role === 'admin' && (
             <NavItem onClick={() => go('/admin')}>📊 {t('nav.admin')}</NavItem>
           )}
+          {user?.role === 'admin' && (
+            <NavItem onClick={() => go('/admin/employees')}>👥 {t('employees.title')}</NavItem>
+          )}
         </div>
 
         {/* Logout */}
