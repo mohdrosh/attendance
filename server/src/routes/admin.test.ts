@@ -4,10 +4,6 @@ import { createApp } from '../app';
 import { pool } from '../db/pool';
 import { clearDatabase, closePool } from '../db/testHelpers';
 
-jest.mock('../services/email/NodemailerService', () => ({
-  emailService: { send: jest.fn().mockResolvedValue(undefined) },
-}));
-
 const app = createApp();
 let adminToken: string;
 let employeeToken: string;
@@ -63,87 +59,6 @@ describe('GET /api/admin/requests', () => {
 
   it('returns 403 for applicants', async () => {
     const res = await request(app).get('/api/admin/requests').set('Authorization', `Bearer ${employeeToken}`);
-    expect(res.status).toBe(403);
-  });
-});
-
-describe('PATCH /api/admin/requests/:id/status', () => {
-  it('approves a request and updates status in DB', async () => {
-    const res = await request(app)
-      .patch(`/api/admin/requests/${requestId}/status`)
-      .set('Authorization', `Bearer ${adminToken}`)
-      .send({ status: 'approved' });
-    expect(res.status).toBe(200);
-
-    const listRes = await request(app).get('/api/admin/requests').set('Authorization', `Bearer ${adminToken}`);
-    expect(listRes.body[0].status).toBe('approved');
-  });
-
-  it('does not send email when sendNotification is not set', async () => {
-    const { emailService } = require('../services/email/NodemailerService');
-    (emailService.send as jest.Mock).mockClear();
-    await request(app)
-      .patch(`/api/admin/requests/${requestId}/status`)
-      .set('Authorization', `Bearer ${adminToken}`)
-      .send({ status: 'rejected' });
-    expect(emailService.send).not.toHaveBeenCalled();
-  });
-
-  it('does not send email when sendNotification is false', async () => {
-    const { emailService } = require('../services/email/NodemailerService');
-    (emailService.send as jest.Mock).mockClear();
-    await request(app)
-      .patch(`/api/admin/requests/${requestId}/status`)
-      .set('Authorization', `Bearer ${adminToken}`)
-      .send({ status: 'rejected', sendNotification: false });
-    expect(emailService.send).not.toHaveBeenCalled();
-  });
-
-  it('sends bilingual rejection email to employee when sendNotification is true', async () => {
-    const { emailService } = require('../services/email/NodemailerService');
-    (emailService.send as jest.Mock).mockClear();
-    await request(app)
-      .patch(`/api/admin/requests/${requestId}/status`)
-      .set('Authorization', `Bearer ${adminToken}`)
-      .send({ status: 'rejected', sendNotification: true, rejectionReason: 'Missing docs' });
-    expect(emailService.send).toHaveBeenCalledWith(
-      expect.objectContaining({
-        to: ['emp@test.com'],
-        subject: expect.stringContaining('【否認】'),
-      })
-    );
-    const callArg = (emailService.send as jest.Mock).mock.calls[0][0];
-    expect(callArg.body).toContain('Missing docs');
-  });
-
-  it('sends bilingual approval email to employee when sendNotification is true', async () => {
-    const { emailService } = require('../services/email/NodemailerService');
-    (emailService.send as jest.Mock).mockClear();
-    await request(app)
-      .patch(`/api/admin/requests/${requestId}/status`)
-      .set('Authorization', `Bearer ${adminToken}`)
-      .send({ status: 'approved', sendNotification: true });
-    expect(emailService.send).toHaveBeenCalledWith(
-      expect.objectContaining({
-        to: ['emp@test.com'],
-        subject: expect.stringContaining('【承認】'),
-      })
-    );
-  });
-
-  it('returns 400 for invalid status', async () => {
-    const res = await request(app)
-      .patch(`/api/admin/requests/${requestId}/status`)
-      .set('Authorization', `Bearer ${adminToken}`)
-      .send({ status: 'invalid' });
-    expect(res.status).toBe(400);
-  });
-
-  it('returns 403 for applicants', async () => {
-    const res = await request(app)
-      .patch(`/api/admin/requests/${requestId}/status`)
-      .set('Authorization', `Bearer ${employeeToken}`)
-      .send({ status: 'approved' });
     expect(res.status).toBe(403);
   });
 });

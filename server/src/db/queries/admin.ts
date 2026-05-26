@@ -57,30 +57,3 @@ export async function getAllRequests(filters: AdminRequestFilters): Promise<Atte
   return rows;
 }
 
-export async function updateRequestStatus(
-  requestId: string,
-  status: 'approved' | 'rejected',
-  reviewedBy: string
-): Promise<{
-  employee_id: string;
-  name_ja: string;
-  name_en: string;
-  email: string;
-  request_type: string;
-  start_date: string;
-  end_date: string | null;
-  time_from: string | null;
-  time_to: string | null;
-} | undefined> {
-  const { rows } = await pool.query(
-    `UPDATE requests
-     SET status = $1, reviewed_by = $2, reviewed_at = NOW()
-     FROM users
-     WHERE requests.id = $3 AND users.id = requests.employee_id
-     RETURNING requests.employee_id, requests.request_type, requests.start_date,
-               requests.end_date, requests.time_from, requests.time_to,
-               users.name_ja, users.name_en, users.email`,
-    [status, reviewedBy, requestId]
-  );
-  return rows[0];
-}
