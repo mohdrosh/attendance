@@ -4,9 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ---
 
-## Current Status — as of 2026-05-25
+## Current Status — as of 2026-05-26
 
-**MVP + Admin Employee Management fully implemented.** App is live on Railway and functional end-to-end.
+**MVP + Admin Employee Management + Admin Dashboard Redesign fully implemented.** App is live on Railway and functional end-to-end.
 
 ### What is done
 - Full monorepo scaffold (npm workspaces: `shared/`, `server/`, `client/`)
@@ -14,13 +14,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Complete backend API (auth, requests, admin, attachments, email)
 - Complete React frontend with all pages and components
 - Bilingual UI (Japanese default, English toggle) — i18next
-- All tests passing: 70 backend + 3 frontend
-- UI/UX iteration: hamburger nav, dropdowns, dashboards, footer, status badges, filters
+- All tests passing: 72 backend + 3 frontend
+- UI/UX iteration: hamburger nav, dropdowns, dashboards, footer, filters
 - Deployed to Railway (Nixpacks builder, static client served by Express in production)
 - Email notifications working via Brevo HTTP API (Railway blocks SMTP port 587)
 - 7 request types: late, early_departure, absence, other_request, chokko (直行), chokki (直帰), kyujitsu_shukkin (休日出勤)
 - Simplified 5-reason list shared across all types; special (特別休暇（慶弔）) leave type added
 - **Admin employee management** at `/admin/employees`: create/view/edit/deactivate/reactivate/delete employees, auto-generated temp passwords, manager assignment, complete audit trail
+- **Admin dashboard redesign**: approval/rejection workflow removed; per-admin Gmail-style read/unread tracking via `request_read_status` junction table; hard-delete for admins; unread dot + bold font on unread rows; "Unread only" filter toggle; auto-marks read on panel open
 
 ### Known working credentials (seeded)
 | Role | Employee No. | Password |
@@ -69,7 +70,7 @@ cd shared && npm run build         # Build shared package only
 
 ## What This System Does
 
-Foreign employees at a Japanese company submit attendance requests (late arrival, early departure, absence, other) to their managers. The system auto-generates bilingual (JP/EN) notification emails based on form data. Admins can approve or reject requests.
+Foreign employees at a Japanese company submit attendance requests (late arrival, early departure, absence, other) to their managers. The system auto-generates bilingual (JP/EN) notification emails based on form data. Requests are one-directional — employees submit, admins receive and track via the dashboard (no approve/reject).
 
 ---
 
@@ -98,16 +99,16 @@ attendance-system/
 │   └── src/
 │       ├── pages/
 │       │   ├── LoginPage.tsx         # Demo credential buttons (auto-fill + login)
-│       │   ├── DashboardPage.tsx     # User dashboard: stats, search, filter, sort
+│       │   ├── DashboardPage.tsx     # User dashboard: Total stat card, search, type filter, sort
 │       │   ├── RequestFormPage.tsx   # Multi-type form with dropdowns, asterisks, placeholders
 │       │   ├── ConfirmPage.tsx       # Preview bilingual message, recipients, send
-│       │   └── AdminPage.tsx         # Admin dashboard: stats, search, filter, sort, detail panel
+│       │   └── AdminPage.tsx         # Admin dashboard: unread indicators, unread filter toggle, search, type/date filters, detail panel
 │       ├── components/
 │       │   ├── Navbar.tsx            # Hamburger (left) → left-side drawer with profile header
 │       │   ├── LanguageToggle.tsx    # Accepts navbar prop for white frosted style on blue bar
 │       │   ├── Footer.tsx            # © MORABU HANSHIN Industry Co., Ltd.
 │       │   ├── ProtectedRoute.tsx    # Role-based route guard
-│       │   ├── RequestDetailPanel.tsx # Admin approve/reject slide-in panel
+│       │   ├── RequestDetailPanel.tsx # Admin slide-in panel: auto-marks read on open, mark-unread toggle, delete with confirmation
 │       │   ├── ProfilePanel.tsx      # Kept but superseded by Navbar drawer (can be removed)
 │       │   └── Toast.tsx             # Fixed-position success toast
 │       ├── context/
@@ -135,7 +136,7 @@ attendance-system/
 │       │   ├── auth.ts               # POST /login, POST /refresh, POST /logout
 │       │   ├── users.ts              # GET /me, GET /me/managers, GET /me/train-lines
 │       │   ├── requests.ts           # GET, POST /requests (multipart upload via multer)
-│       │   ├── admin.ts              # GET /admin/requests (filters), PATCH /:id/status
+│       │   ├── admin.ts              # GET /admin/requests; POST /:id/read; POST /:id/unread; DELETE /:id
 │       │   └── attachments.ts        # GET /attachments/:id (admin only, streams file)
 │       ├── middleware/
 │       │   ├── authMiddleware.ts     # Verifies JWT Bearer token
@@ -148,12 +149,15 @@ attendance-system/
 │       │   ├── testHelpers.ts        # clearDatabase() for test beforeEach/afterAll
 │       │   ├── migrations/
 │       │   │   ├── 001_initial_schema.sql       # Full schema with enums, tables, indexes
-│       │   │   └── 002_nullable_reason_category.sql  # Makes reason_category nullable (other_request has no required reason)
-│   │   │   └── 003_update_enums.sql         # Replaces request_type/reason_category/leave_type enums; adds 3 new request types
+│       │   │   ├── 002_nullable_reason_category.sql  # Makes reason_category nullable (other_request has no required reason)
+│       │   │   ├── 003_update_enums.sql         # Replaces request_type/reason_category/leave_type enums; adds 3 new request types
+│       │   │   ├── 004_employees.sql            # Admin employee management tables
+│       │   │   ├── 005_employees_ext.sql        # Employee table extensions
+│       │   │   └── 006_read_status.sql          # request_read_status junction table (per-admin read tracking)
 │       │   └── queries/
 │       │       ├── users.ts          # getUserByEmployeeNumber, getManagersByEmployeeId, etc.
 │       │       ├── requests.ts       # createRequest, getUserRequests, getRequestById
-│       │       └── admin.ts          # getFilteredRequests, updateRequestStatus
+│       │       └── admin.ts          # getAllRequests (LEFT JOIN read_status, adminId-scoped), markRequestRead, markRequestUnread, deleteRequest
 │       ├── services/
 │       │   ├── email/
 │       │   │   ├── EmailService.ts   # Interface — send(to, subject, body)
@@ -194,9 +198,12 @@ This makes Vite resolve `@attendance/shared` directly to TypeScript source, tran
 ### import type for all shared types
 `client/tsconfig.app.json` has `verbatimModuleSyntax: true`. All type-only imports from `@attendance/shared` must use `import type`:
 ```ts
-import type { Request, RequestStatus, UserProfile } from '@attendance/shared';
+import type { Request as AttendanceRequest, RequestType } from '@attendance/shared';
 import { generateMessage } from '@attendance/shared';  // ← value import, no "type"
 ```
+
+### Per-admin read/unread tracking
+`request_read_status(request_id UUID, admin_id UUID, read_at TIMESTAMPTZ)` is a junction table where a row = read, no row = unread. Both FKs use `ON DELETE CASCADE` — deleting a request or user automatically cleans up read-status rows. `getAllRequests` LEFT JOINs this table keyed on the authenticated admin's id (`req.user!.id`), selecting `(rrs.admin_id IS NOT NULL) AS is_read`. The `adminId` param is always sourced from the JWT, never from request input — admin A cannot affect admin B's read state. `markRequestRead` uses `INSERT ... ON CONFLICT DO NOTHING` for idempotency.
 
 ### createApp() factory pattern
 `server/src/app.ts` exports `createApp()` — returns the Express app without calling `.listen()`. `server/src/index.ts` calls `createApp()` then `.listen()`. Tests import `createApp()` directly via Supertest with no port conflicts.
@@ -229,7 +236,7 @@ PostgreSQL 18 does not allow `FILTER` on non-aggregate functions. Do not change 
 **Brevo setup:** Sign up free at brevo.com → verify sender email → get API key → set `BREVO_API_KEY` env var. The `SMTP_FROM` value is used as the sender address and must match the verified sender in Brevo.
 
 ### Email sends are fire-and-forget
-Both `routes/requests.ts` (manager notification on submit) and `routes/admin.ts` (employee notification on approve/reject) call `emailService.send({...}).catch(...)` **without `await`**. This is intentional — awaiting the send blocked the HTTP response while SMTP was timing out, causing the UI to show "..." indefinitely. Email failures are logged to console but never surface to the user.
+`routes/requests.ts` (manager notification on submit) calls `emailService.send({...}).catch(...)` **without `await`**. This is intentional — awaiting the send blocked the HTTP response while SMTP was timing out, causing the UI to show "..." indefinitely. Email failures are logged to console but never surface to the user.
 
 ### DATE columns return strings
 `server/src/db/pool.ts` registers a custom type parser:
@@ -276,16 +283,25 @@ In production (`NODE_ENV=production`), `server/src/app.ts` serves the React buil
 - Drawer: slides from left, `border-radius: 0 16px 16px 0`, blue gradient profile header with SVG avatar, both names (JA + EN), role badge, nav links, logout
 
 ### Dashboard (DashboardPage.tsx) — user
-- 4 stat cards (Total/Pending/Approved/Rejected) — clicking status cards filters the table
-- Search bar + type filter + status filter + sort (newest/oldest/by status)
+- 1 stat card (Total only)
+- Search bar + type filter + sort (newest/oldest)
 - Clear button appears when filters are active
 - Row count footer: `n / total`
 
 ### Admin Dashboard (AdminPage.tsx)
-- Same stat cards (clickable status filter)
+- 1 stat card (Total only)
+- Unread rows shown with blue dot + bold font
+- "Unread only" toggle filter (pill button in search row)
 - Separate search row (name/employee no. + sort dropdown)
-- Separate filter row (type, status, date range with `→`)
+- Separate filter row (type, date range with `→`)
+- "Clear filters" appears when any filter (including unread toggle) is active
 - Table rows open RequestDetailPanel on click
+
+### RequestDetailPanel (RequestDetailPanel.tsx) — admin
+- Auto-marks request as read on open (POST /read, skipped if already read)
+- "Mark as Unread" / "Mark as Read" toggle button
+- "Delete" button with inline two-step confirmation (Cancel / Delete)
+- All field displays kept: name, type, date, reason, leave type, admin message, attachment download
 
 ### Login Page (LoginPage.tsx)
 - Demo account buttons: clicking **Admin** or **Employee** auto-fills credentials and immediately logs in
@@ -362,7 +378,8 @@ cd .. && npm run dev
 | **Frontend test coverage** | Only LoginPage has tests. DashboardPage, AdminPage, RequestFormPage, ConfirmPage, AdminEmployeesPage have no tests. |
 | **Mobile responsiveness** | Tables overflow on small screens. No responsive breakpoints implemented. |
 | **Pagination** | Admin table loads all requests — no pagination or infinite scroll. Will degrade with large datasets. |
-| **Notification on approval** | By design: approval sends no email. Rejection sends email to applicant. Revisit if requirements change. |
+| **Dead DB columns** | `requests.status`, `requests.reviewed_by`, `requests.reviewed_at` and the `request_status` enum remain in DB and shared type but are no longer used (approval workflow removed). Safe to drop in a future migration. `RequestStatus` type still exported from shared. |
+| **handleMarkRead/handleMarkUnread error handling** | In `RequestDetailPanel.tsx`, the toggle buttons don't check `res.ok` — they optimistically update local state. A network error silently leaves UI and DB out of sync. Low-risk for now. |
 
 ### Diagnostic endpoint (remove when no longer needed)
 `GET /api/health/email` — tests SMTP/Brevo connectivity and returns `{ ok, error }` as JSON. Added for Railway debugging. Safe to remove from `server/src/app.ts` once email is confirmed stable.
