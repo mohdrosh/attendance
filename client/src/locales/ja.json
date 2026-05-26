@@ -48,11 +48,6 @@
     "chokki": "直帰",
     "kyujitsu_shukkin": "休日出勤"
   },
-  "status": {
-    "pending": "承認待ち",
-    "approved": "承認済み",
-    "rejected": "却下"
-  },
   "form": {
     "title": "勤怠申請",
     "request_type": "申請種別",
@@ -112,6 +107,7 @@
     "sort_oldest": "古い順",
     "sort_name": "名前順",
     "sort_status": "ステータス順",
+    "filter_unread": "未読のみ",
     "all": "すべて",
     "stats": {
       "total": "合計",
@@ -134,16 +130,13 @@
   },
   "detail_panel": {
     "title": "申請詳細",
-    "approve": "承認",
-    "reject": "却下",
     "attachment": "添付ファイル",
     "download": "ダウンロード",
     "admin_message": "管理者へのメッセージ",
-    "send_notification": "申請者にメール通知を送る",
-    "rejection_reason": "却下理由",
-    "rejection_reason_placeholder": "却下理由を入力してください（任意）",
-    "approved_title": "申請を承認しました",
-    "rejected_title": "申請を却下しました",
+    "mark_unread": "未読に戻す",
+    "mark_read": "既読にする",
+    "delete": "削除",
+    "confirm_delete": "本当に削除しますか？この操作は元に戻せません。",
     "close": "閉じる"
   },
   "profile": {

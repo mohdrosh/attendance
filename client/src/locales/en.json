@@ -48,11 +48,6 @@
     "chokki": "Going Directly Home (Chokki)",
     "kyujitsu_shukkin": "Holiday Work (Kyujitsu Shukkin)"
   },
-  "status": {
-    "pending": "Pending",
-    "approved": "Approved",
-    "rejected": "Rejected"
-  },
   "form": {
     "title": "Attendance Request",
     "request_type": "Request Type",
@@ -112,6 +107,7 @@
     "sort_oldest": "Oldest first",
     "sort_name": "By name",
     "sort_status": "By status",
+    "filter_unread": "Unread only",
     "all": "All",
     "stats": {
       "total": "Total",
@@ -134,16 +130,13 @@
   },
   "detail_panel": {
     "title": "Request Detail",
-    "approve": "Approve",
-    "reject": "Reject",
     "attachment": "Attachment",
     "download": "Download",
     "admin_message": "Message from employee",
-    "send_notification": "Send notification email to employee",
-    "rejection_reason": "Rejection Reason",
-    "rejection_reason_placeholder": "Enter reason for rejection (optional)",
-    "approved_title": "Request Approved",
-    "rejected_title": "Request Rejected",
+    "mark_unread": "Mark as Unread",
+    "mark_read": "Mark as Read",
+    "delete": "Delete",
+    "confirm_delete": "Are you sure? This cannot be undone.",
     "close": "Close"
   },
   "profile": {
