@@ -4,22 +4,9 @@ import { useTranslation } from 'react-i18next';
 import { Navbar } from '../components/Navbar';
 import { Footer } from '../components/Footer';
 import { useRequests } from '../hooks/useRequests';
-import type { RequestStatus, RequestType } from '@attendance/shared';
+import type { RequestType } from '@attendance/shared';
 
-const STATUS_STYLES: Record<RequestStatus, { color: string; bg: string }> = {
-  pending:  { color: '#92400e', bg: '#fef3c7' },
-  approved: { color: '#065f46', bg: '#d1fae5' },
-  rejected: { color: '#991b1b', bg: '#fee2e2' },
-};
-
-const STAT_META: { key: RequestStatus | 'total'; color: string; border: string }[] = [
-  { key: 'total',    color: '#1d4ed8', border: '#bfdbfe' },
-  { key: 'pending',  color: '#92400e', border: '#fde68a' },
-  { key: 'approved', color: '#065f46', border: '#6ee7b7' },
-  { key: 'rejected', color: '#991b1b', border: '#fca5a5' },
-];
-
-type SortKey = 'newest' | 'oldest' | 'status';
+type SortKey = 'newest' | 'oldest';
 
 const selectStyle: React.CSSProperties = {
   padding: '7px 10px', border: '1px solid #e5e7eb', borderRadius: '8px',
@@ -31,26 +18,21 @@ export function DashboardPage() {
   const navigate = useNavigate();
   const { requests, loading, fetchRequests } = useRequests();
 
-  const [search, setSearch]           = useState('');
-  const [filterStatus, setFilterStatus] = useState<RequestStatus | ''>('');
-  const [filterType, setFilterType]   = useState<RequestType | ''>('');
-  const [sortBy, setSortBy]           = useState<SortKey>('newest');
+  const [search, setSearch]         = useState('');
+  const [filterType, setFilterType] = useState<RequestType | ''>('');
+  const [sortBy, setSortBy]         = useState<SortKey>('newest');
 
   useEffect(() => { fetchRequests(); }, [fetchRequests]);
 
   const stats = useMemo(() => ({
-    total:    requests.length,
-    pending:  requests.filter(r => r.status === 'pending').length,
-    approved: requests.filter(r => r.status === 'approved').length,
-    rejected: requests.filter(r => r.status === 'rejected').length,
+    total: requests.length,
   }), [requests]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return requests
       .filter(r => {
-        if (filterStatus && r.status !== filterStatus) return false;
-        if (filterType  && r.request_type !== filterType) return false;
+        if (filterType && r.request_type !== filterType) return false;
         if (q && !r.start_date.includes(q) &&
             !t(`request_type.${r.request_type}`).toLowerCase().includes(q) &&
             !t(`form.reasons.${r.reason_category}`).toLowerCase().includes(q)) return false;
@@ -58,13 +40,9 @@ export function DashboardPage() {
       })
       .sort((a, b) => {
         if (sortBy === 'oldest') return new Date(a.submitted_at).getTime() - new Date(b.submitted_at).getTime();
-        if (sortBy === 'status') {
-          const o: Record<RequestStatus, number> = { pending: 0, approved: 1, rejected: 2 };
-          return o[a.status] - o[b.status];
-        }
         return new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime();
       });
-  }, [requests, search, filterStatus, filterType, sortBy, t]);
+  }, [requests, search, filterType, sortBy, t]);
 
   return (
     <div style={{ minHeight: '100vh', background: '#f8fafc', display: 'flex', flexDirection: 'column' }}>
@@ -91,25 +69,13 @@ export function DashboardPage() {
         </div>
 
         {/* Stat cards */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '22px' }}>
-          {STAT_META.map(({ key, color, border }) => (
-            <div
-              key={key}
-              onClick={() => key !== 'total' && setFilterStatus(filterStatus === key ? '' : key as RequestStatus)}
-              style={{
-                background: 'white', borderRadius: '10px', padding: '14px 16px',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.07)',
-                border: `1px solid ${filterStatus === key ? border : '#f0f0f0'}`,
-                cursor: key !== 'total' ? 'pointer' : 'default',
-                transition: 'border-color 0.15s',
-              }}
-            >
-              <div style={{ fontSize: '0.72em', fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '6px' }}>
-                {t(`dashboard.stats.${key}`)}
-              </div>
-              <div style={{ fontSize: '1.7em', fontWeight: 700, color }}>{stats[key]}</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(1, 1fr)', gap: '12px', marginBottom: '22px', maxWidth: '200px' }}>
+          <div style={{ background: 'white', borderRadius: '10px', padding: '14px 16px', boxShadow: '0 1px 3px rgba(0,0,0,0.07)', border: '1px solid #f0f0f0' }}>
+            <div style={{ fontSize: '0.72em', fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '6px' }}>
+              {t('dashboard.stats.total')}
             </div>
-          ))}
+            <div style={{ fontSize: '1.7em', fontWeight: 700, color: '#1d4ed8' }}>{stats.total}</div>
+          </div>
         </div>
 
         {/* Search + filters */}
@@ -126,20 +92,13 @@ export function DashboardPage() {
               <option key={type} value={type}>{t(`request_type.${type}`)}</option>
             ))}
           </select>
-          <select value={filterStatus} onChange={e => setFilterStatus(e.target.value as RequestStatus | '')} style={selectStyle}>
-            <option value="">{t('admin.all')} ({t('admin.columns.status')})</option>
-            {(['pending', 'approved', 'rejected'] as RequestStatus[]).map(s => (
-              <option key={s} value={s}>{t(`status.${s}`)}</option>
-            ))}
-          </select>
           <select value={sortBy} onChange={e => setSortBy(e.target.value as SortKey)} style={selectStyle}>
             <option value="newest">{t('dashboard.sort_newest')}</option>
             <option value="oldest">{t('dashboard.sort_oldest')}</option>
-            <option value="status">{t('dashboard.sort_status')}</option>
           </select>
-          {(search || filterStatus || filterType) && (
+          {(search || filterType) && (
             <button
-              onClick={() => { setSearch(''); setFilterStatus(''); setFilterType(''); }}
+              onClick={() => { setSearch(''); setFilterType(''); }}
               style={{ padding: '7px 12px', background: '#f3f4f6', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '0.82em', color: '#6b7280' }}
             >
               ✕ Clear
@@ -158,7 +117,7 @@ export function DashboardPage() {
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e5e7eb' }}>
-                  {['date', 'time_from', 'time_to', 'type', 'reason', 'submitted', 'status'].map(col => (
+                  {['date', 'time_from', 'time_to', 'type', 'reason', 'submitted'].map(col => (
                     <th key={col} style={{ padding: '11px 16px', textAlign: 'left', fontSize: '0.75em', fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                       {t(`dashboard.columns.${col}`)}
                     </th>
@@ -185,15 +144,6 @@ export function DashboardPage() {
                     <td style={{ padding: '13px 16px', fontSize: '0.9em' }}>{t(`request_type.${r.request_type}`)}</td>
                     <td style={{ padding: '13px 16px', fontSize: '0.88em', color: '#6b7280' }}>{r.reason_category ? t(`form.reasons.${r.reason_category}`) : '—'}</td>
                     <td style={{ padding: '13px 16px', fontSize: '0.88em', color: '#6b7280' }}>{new Date(r.submitted_at).toLocaleDateString()}</td>
-                    <td style={{ padding: '13px 16px' }}>
-                      <span style={{
-                        display: 'inline-block', padding: '3px 10px', borderRadius: '999px',
-                        fontSize: '0.78em', fontWeight: 700,
-                        color: STATUS_STYLES[r.status].color, background: STATUS_STYLES[r.status].bg,
-                      }}>
-                        {t(`status.${r.status}`)}
-                      </span>
-                    </td>
                   </tr>
                 ))}
               </tbody>
