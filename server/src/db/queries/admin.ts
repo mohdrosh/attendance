@@ -9,7 +9,7 @@ export interface AdminRequestFilters {
   status?: RequestStatus;
 }
 
-export async function getAllRequests(filters: AdminRequestFilters): Promise<AttendanceRequest[]> {
+export async function getAllRequests(filters: AdminRequestFilters, adminId: string): Promise<AttendanceRequest[]> {
   const conditions: string[] = [];
   const params: unknown[] = [];
   let i = 1;
@@ -36,6 +36,9 @@ export async function getAllRequests(filters: AdminRequestFilters): Promise<Atte
     params.push(filters.status);
   }
 
+  params.push(adminId);
+  const adminIdx = params.length;
+
   const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
   const { rows } = await pool.query(
@@ -45,11 +48,13 @@ export async function getAllRequests(filters: AdminRequestFilters): Promise<Atte
             CASE WHEN a.id IS NOT NULL THEN json_build_object(
               'id', a.id, 'original_filename', a.original_filename,
               'file_size', a.file_size, 'uploaded_at', a.uploaded_at, 'expires_at', a.expires_at
-            ) END AS attachment
+            ) END AS attachment,
+            (rrs.admin_id IS NOT NULL) AS is_read
      FROM requests r
      JOIN users u ON u.id = r.employee_id
      LEFT JOIN train_lines t ON t.id = r.train_line_id
      LEFT JOIN attachments a ON a.request_id = r.id
+     LEFT JOIN request_read_status rrs ON rrs.request_id = r.id AND rrs.admin_id = $${adminIdx}
      ${where}
      ORDER BY r.submitted_at DESC`,
     params
@@ -57,3 +62,27 @@ export async function getAllRequests(filters: AdminRequestFilters): Promise<Atte
   return rows;
 }
 
+export async function markRequestRead(requestId: string, adminId: string): Promise<void> {
+  await pool.query(
+    `INSERT INTO request_read_status (request_id, admin_id)
+     VALUES ($1, $2)
+     ON CONFLICT DO NOTHING`,
+    [requestId, adminId]
+  );
+}
+
+export async function markRequestUnread(requestId: string, adminId: string): Promise<void> {
+  await pool.query(
+    `DELETE FROM request_read_status
+     WHERE request_id = $1 AND admin_id = $2`,
+    [requestId, adminId]
+  );
+}
+
+export async function deleteRequest(requestId: string): Promise<boolean> {
+  const { rowCount } = await pool.query(
+    `DELETE FROM requests WHERE id = $1`,
+    [requestId]
+  );
+  return (rowCount ?? 0) > 0;
+}

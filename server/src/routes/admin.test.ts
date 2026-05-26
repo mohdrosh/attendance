@@ -62,3 +62,87 @@ describe('GET /api/admin/requests', () => {
     expect(res.status).toBe(403);
   });
 });
+
+describe('GET /api/admin/requests — is_read field', () => {
+  it('includes is_read boolean in each request (false by default)', async () => {
+    const res = await request(app).get('/api/admin/requests').set('Authorization', `Bearer ${adminToken}`);
+    expect(res.status).toBe(200);
+    expect(typeof res.body[0].is_read).toBe('boolean');
+    expect(res.body[0].is_read).toBe(false);
+  });
+});
+
+describe('POST /api/admin/requests/:id/read', () => {
+  it('marks request as read and reflects in GET', async () => {
+    const readRes = await request(app)
+      .post(`/api/admin/requests/${requestId}/read`)
+      .set('Authorization', `Bearer ${adminToken}`);
+    expect(readRes.status).toBe(200);
+    expect(readRes.body).toEqual({ ok: true });
+
+    const listRes = await request(app).get('/api/admin/requests').set('Authorization', `Bearer ${adminToken}`);
+    expect(listRes.body[0].is_read).toBe(true);
+  });
+
+  it('is idempotent — calling twice does not error', async () => {
+    await request(app).post(`/api/admin/requests/${requestId}/read`).set('Authorization', `Bearer ${adminToken}`);
+    const res = await request(app).post(`/api/admin/requests/${requestId}/read`).set('Authorization', `Bearer ${adminToken}`);
+    expect(res.status).toBe(200);
+  });
+
+  it('returns 403 for applicants', async () => {
+    const res = await request(app)
+      .post(`/api/admin/requests/${requestId}/read`)
+      .set('Authorization', `Bearer ${employeeToken}`);
+    expect(res.status).toBe(403);
+  });
+});
+
+describe('POST /api/admin/requests/:id/unread', () => {
+  it('marks request as unread after being read', async () => {
+    await request(app).post(`/api/admin/requests/${requestId}/read`).set('Authorization', `Bearer ${adminToken}`);
+
+    const unreadRes = await request(app)
+      .post(`/api/admin/requests/${requestId}/unread`)
+      .set('Authorization', `Bearer ${adminToken}`);
+    expect(unreadRes.status).toBe(200);
+    expect(unreadRes.body).toEqual({ ok: true });
+
+    const listRes = await request(app).get('/api/admin/requests').set('Authorization', `Bearer ${adminToken}`);
+    expect(listRes.body[0].is_read).toBe(false);
+  });
+
+  it('returns 403 for applicants', async () => {
+    const res = await request(app)
+      .post(`/api/admin/requests/${requestId}/unread`)
+      .set('Authorization', `Bearer ${employeeToken}`);
+    expect(res.status).toBe(403);
+  });
+});
+
+describe('DELETE /api/admin/requests/:id', () => {
+  it('deletes the request and removes it from GET', async () => {
+    const delRes = await request(app)
+      .delete(`/api/admin/requests/${requestId}`)
+      .set('Authorization', `Bearer ${adminToken}`);
+    expect(delRes.status).toBe(200);
+    expect(delRes.body).toEqual({ ok: true });
+
+    const listRes = await request(app).get('/api/admin/requests').set('Authorization', `Bearer ${adminToken}`);
+    expect(listRes.body).toHaveLength(0);
+  });
+
+  it('returns 404 for non-existent request', async () => {
+    const res = await request(app)
+      .delete('/api/admin/requests/00000000-0000-0000-0000-000000000000')
+      .set('Authorization', `Bearer ${adminToken}`);
+    expect(res.status).toBe(404);
+  });
+
+  it('returns 403 for applicants', async () => {
+    const res = await request(app)
+      .delete(`/api/admin/requests/${requestId}`)
+      .set('Authorization', `Bearer ${employeeToken}`);
+    expect(res.status).toBe(403);
+  });
+});
