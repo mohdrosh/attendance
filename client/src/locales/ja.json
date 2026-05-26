@@ -22,12 +22,8 @@
     "search_placeholder": "日付・申請種別で検索…",
     "sort_newest": "新しい順",
     "sort_oldest": "古い順",
-    "sort_status": "ステータス順",
     "stats": {
-      "total": "合計",
-      "pending": "承認待ち",
-      "approved": "承認済み",
-      "rejected": "却下"
+      "total": "合計"
     },
     "columns": {
       "date": "日付",
@@ -35,8 +31,7 @@
       "time_to": "終了",
       "type": "申請種別",
       "reason": "理由",
-      "submitted": "申請日",
-      "status": "ステータス"
+      "submitted": "申請日"
     }
   },
   "request_type": {
@@ -102,18 +97,13 @@
     "filter_type": "申請種別",
     "filter_from": "開始日",
     "filter_to": "終了日",
-    "filter_status": "ステータス",
     "sort_newest": "新しい順",
     "sort_oldest": "古い順",
     "sort_name": "名前順",
-    "sort_status": "ステータス順",
     "filter_unread": "未読のみ",
     "all": "すべて",
     "stats": {
-      "total": "合計",
-      "pending": "承認待ち",
-      "approved": "承認済み",
-      "rejected": "却下"
+      "total": "合計"
     },
     "columns": {
       "name": "氏名",
@@ -124,8 +114,7 @@
       "type": "申請種別",
       "reason": "理由",
       "leave_type": "休暇種別",
-      "submitted": "申請日",
-      "status": "ステータス"
+      "submitted": "申請日"
     }
   },
   "detail_panel": {
@@ -150,7 +139,7 @@
     }
   },
   "toast": {
-    "request_sent": "申請を送信しました。承認待ちです。"
+    "request_sent": "申請を送信しました。"
   },
   "employees": {
     "title": "社員管理",

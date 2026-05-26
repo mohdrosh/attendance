@@ -71,10 +71,10 @@ export function AdminPage() {
       });
   }, [requests, search, sortBy, filterUnread]);
 
-  const hasFilters = filterType || filterFrom || filterTo;
+  const hasFilters = filterType || filterFrom || filterTo || filterUnread;
 
   function clearFilters() {
-    setFilterType(''); setFilterFrom(''); setFilterTo('');
+    setFilterType(''); setFilterFrom(''); setFilterTo(''); setFilterUnread(false);
   }
 
   function handleClose() {

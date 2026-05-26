@@ -22,12 +22,8 @@
     "search_placeholder": "Search by date or type…",
     "sort_newest": "Newest first",
     "sort_oldest": "Oldest first",
-    "sort_status": "By status",
     "stats": {
-      "total": "Total",
-      "pending": "Pending",
-      "approved": "Approved",
-      "rejected": "Rejected"
+      "total": "Total"
     },
     "columns": {
       "date": "Date",
@@ -35,8 +31,7 @@
       "time_to": "To",
       "type": "Type",
       "reason": "Reason",
-      "submitted": "Submitted",
-      "status": "Status"
+      "submitted": "Submitted"
     }
   },
   "request_type": {
@@ -102,18 +97,13 @@
     "filter_type": "Request Type",
     "filter_from": "From Date",
     "filter_to": "To Date",
-    "filter_status": "Status",
     "sort_newest": "Newest first",
     "sort_oldest": "Oldest first",
     "sort_name": "By name",
-    "sort_status": "By status",
     "filter_unread": "Unread only",
     "all": "All",
     "stats": {
-      "total": "Total",
-      "pending": "Pending",
-      "approved": "Approved",
-      "rejected": "Rejected"
+      "total": "Total"
     },
     "columns": {
       "name": "Name",
@@ -124,8 +114,7 @@
       "type": "Type",
       "reason": "Reason",
       "leave_type": "Leave Type",
-      "submitted": "Submitted",
-      "status": "Status"
+      "submitted": "Submitted"
     }
   },
   "detail_panel": {
@@ -150,7 +139,7 @@
     }
   },
   "toast": {
-    "request_sent": "Request sent. Pending approval."
+    "request_sent": "Request submitted successfully."
   },
   "employees": {
     "title": "Employee Management",
