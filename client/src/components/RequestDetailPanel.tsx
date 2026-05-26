@@ -21,6 +21,8 @@ export function RequestDetailPanel({ request, onClose, onRead, onUnread, onDelet
     setIsRead(request.is_read ?? false);
     setShowDeleteConfirm(false);
 
+    if (request.is_read) return;  // already read — skip the POST
+
     apiFetch(`/api/admin/requests/${request.id}/read`, { method: 'POST' })
       .then(() => {
         setIsRead(true);
@@ -47,7 +49,8 @@ export function RequestDetailPanel({ request, onClose, onRead, onUnread, onDelet
 
   async function handleDelete() {
     if (!request) return;
-    await apiFetch(`/api/admin/requests/${request.id}`, { method: 'DELETE' });
+    const res = await apiFetch(`/api/admin/requests/${request.id}`, { method: 'DELETE' });
+    if (!res.ok) return;
     onDelete(request.id);
     onClose();
   }
