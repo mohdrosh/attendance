@@ -37,7 +37,7 @@
   "request_type": {
     "late": "Late Arrival",
     "early_departure": "Early Departure",
-    "absence": "Absence",
+    "absence": "Leave",
     "other_request": "Other Request",
     "chokko": "Going Directly to Client (Chokko)",
     "chokki": "Going Directly Home (Chokki)",
@@ -72,8 +72,8 @@
       "substitute_day": "Substitute Working Day"
     },
     "leave_types": {
-      "paid": "Paid Leave",
-      "unpaid": "Unpaid Leave",
+      "paid": "Paid",
+      "unpaid": "Unpaid (Absence)",
       "substitute": "Substitute Holiday",
       "special": "Special Leave (Wedding/Funeral)"
     }

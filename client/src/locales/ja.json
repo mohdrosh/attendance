@@ -37,7 +37,7 @@
   "request_type": {
     "late": "遅刻",
     "early_departure": "早退",
-    "absence": "欠勤",
+    "absence": "休暇",
     "other_request": "その他",
     "chokko": "直行",
     "chokki": "直帰",
@@ -72,8 +72,8 @@
       "substitute_day": "振替出勤"
     },
     "leave_types": {
-      "paid": "有給休暇",
-      "unpaid": "欠勤",
+      "paid": "有給",
+      "unpaid": "無給（欠勤）",
       "substitute": "振替休日",
       "special": "特別休暇（慶弔）"
     }
