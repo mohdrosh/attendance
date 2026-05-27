@@ -134,5 +134,6 @@ export interface EmployeeDetail {
   is_active: boolean;
   work_start: string | null;
   work_end: string | null;
+  dispatch_company: string | null;
   managers: { id: string; name_ja: string; name_en: string; email: string }[];
 }
