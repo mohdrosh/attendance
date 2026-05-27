@@ -5,6 +5,7 @@ import { generateMessage } from '@attendance/shared';
 import { Navbar } from '../components/Navbar';
 import { Footer } from '../components/Footer';
 import { apiFetch } from '../api/client';
+import { useToast } from '../context/ToastContext';
 
 export function ConfirmPage() {
   const { t } = useTranslation();
@@ -12,6 +13,7 @@ export function ConfirmPage() {
   const location = useLocation();
   const { form, user } = location.state ?? {};
 
+  const { showToast } = useToast();
   const [sending, setSending] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [todoke, setTodoke] = useState<{ blob: Blob; filename: string } | null>(null);
@@ -61,6 +63,8 @@ export function ConfirmPage() {
         const match = disposition.match(/filename="([^"]+)"/);
         const filename = match ? match[1] : 'todoke.xlsx';
         setTodoke({ blob, filename });
+      } else {
+        showToast('Failed to generate todoke. Please try again.');
       }
     } finally {
       setTodokeLoading(false);
@@ -129,7 +133,10 @@ export function ConfirmPage() {
             {form.reasonDetail && <><dt style={{ color: '#9ca3af', fontWeight: 600 }}>{t('form.reason_detail')}</dt><dd style={{ color: '#111' }}>{form.reasonDetail}</dd></>}
             {form.leaveType && <><dt style={{ color: '#9ca3af', fontWeight: 600 }}>{t('form.leave_type')}</dt><dd style={{ color: '#111' }}>{t(`form.leave_types.${form.leaveType}`)}</dd></>}
             {form.adminMessage && <><dt style={{ color: '#9ca3af', fontWeight: 600 }}>{t('detail_panel.admin_message')}</dt><dd style={{ color: '#111' }}>{form.adminMessage}</dd></>}
-            {form.file && <><dt style={{ color: '#9ca3af', fontWeight: 600 }}>File</dt><dd style={{ color: '#111' }}>📎 {form.file.name}</dd></>}
+            {todoke
+              ? <><dt style={{ color: '#9ca3af', fontWeight: 600 }}>File</dt><dd style={{ color: '#111' }}>📎 {todoke.filename}</dd></>
+              : form.file && <><dt style={{ color: '#9ca3af', fontWeight: 600 }}>File</dt><dd style={{ color: '#111' }}>📎 {form.file.name}</dd></>
+            }
           </dl>
         </section>
 
