@@ -55,7 +55,7 @@ employeesRouter.get('/:id', async (req: AuthRequest, res: Response, next) => {
 // PATCH /:id — update fields, write audit log with diff
 employeesRouter.patch('/:id', async (req: AuthRequest, res: Response, next) => {
   try {
-    const { employee_number, name_ja, name_en, email, role, work_start, work_end } = req.body;
+    const { employee_number, name_ja, name_en, email, role, work_start, work_end, dispatch_company } = req.body;
     if (role !== undefined && role !== 'admin' && role !== 'applicant') {
       throw new AppError(400, 'Invalid role');
     }
@@ -63,12 +63,12 @@ employeesRouter.patch('/:id', async (req: AuthRequest, res: Response, next) => {
     const before = await getEmployeeById(req.params.id);
     if (!before) throw new AppError(404, 'Employee not found');
 
-    const patch = { employee_number, name_ja, name_en, email, role, work_start, work_end };
+    const patch = { employee_number, name_ja, name_en, email, role, work_start, work_end, dispatch_company };
     const updated = await updateEmployee(req.params.id, patch);
     if (!updated) throw new AppError(404, 'Employee not found');
 
     const fieldMap: Record<string, string | undefined> = {
-      employee_number, name_ja, name_en, email, role, work_start, work_end,
+      employee_number, name_ja, name_en, email, role, work_start, work_end, dispatch_company,
     };
     const changes: Record<string, { from: string; to: string }> = {};
     for (const [key, newVal] of Object.entries(fieldMap)) {

@@ -19,6 +19,7 @@ export interface UpdateEmployeeData {
   role?: UserRole;
   work_start?: string;
   work_end?: string;
+  dispatch_company?: string;
 }
 
 export async function createEmployee(data: CreateEmployeeData): Promise<string> {
@@ -177,7 +178,7 @@ export async function resetEmployeePassword(id: string, passwordHash: string): P
 
 export async function getEmployeeSnapshot(id: string): Promise<Record<string, string> | null> {
   const { rows } = await pool.query(
-    `SELECT employee_number, name_ja, name_en, email, role FROM users WHERE id = $1`,
+    `SELECT employee_number, name_ja, name_en, email, role, dispatch_company FROM users WHERE id = $1`,
     [id]
   );
   if (!rows[0]) return null;
