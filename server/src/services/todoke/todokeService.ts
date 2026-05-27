@@ -71,7 +71,8 @@ function buildReasonText(input: TodokeInput): string {
 export async function generateTodoke(input: TodokeInput): Promise<Buffer> {
   const workbook = new ExcelJS.Workbook();
   await workbook.xlsx.readFile(TEMPLATE_PATH);
-  const ws = workbook.getWorksheet('届（設計開発）')!;
+  const ws = workbook.getWorksheet('届（設計開発）');
+  if (!ws) throw new Error('Todoke template worksheet not found');
 
   // ── Creation date ──────────────────────────────────────────────────────────
   const now = new Date();
@@ -171,14 +172,12 @@ export async function generateTodoke(input: TodokeInput): Promise<Buffer> {
   // ── Embed hanko ────────────────────────────────────────────────────────────
   const hankoPng = await generateHankoPng(input.employeeNameJa);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const imageId = workbook.addImage({ buffer: hankoPng as any, extension: 'png' });
+  const imageId = workbook.addImage({ buffer: hankoPng as any, extension: 'png' }); // cast needed: ExcelJS types expect node Buffer, but @resvg/resvg-js returns Buffer<ArrayBufferLike>
   ws.addImage(imageId, {
-    // tl: AF9 (0-based: col AF=31, row 9=8), br: past AH11 (0-based: col AI=34, row 12=11)
-    // Use IAnchor-compatible objects — nativeColOff/nativeRowOff default to 0
-    tl: { col: 31, row: 8, nativeCol: 31, nativeRow: 8, nativeColOff: 0, nativeRowOff: 0 } as ExcelJS.Anchor,
-    br: { col: 34, row: 11, nativeCol: 34, nativeRow: 11, nativeColOff: 0, nativeRowOff: 0 } as ExcelJS.Anchor,
+    tl: { col: 31, row: 8 },
+    br: { col: 34, row: 11 },
     editAs: 'oneCell',
-  });
+  } as any);
 
   // ── Return buffer ──────────────────────────────────────────────────────────
   const buf = await workbook.xlsx.writeBuffer();
