@@ -10,8 +10,8 @@ import type { RequestType, ReasonCategory, LeaveType } from '@attendance/shared'
 const OPTIONAL_REASON_TYPES: RequestType[] = ['chokko', 'chokki', 'kyujitsu_shukkin', 'other_request'];
 
 const REASONS_BY_TYPE: Record<RequestType, ReasonCategory[]> = {
-  late:             ['illness', 'family', 'personal', 'weather_transport', 'other'],
-  early_departure:  ['illness', 'family', 'personal', 'weather_transport', 'other'],
+  late:             ['illness', 'train_delay', 'oversleeping', 'other'],
+  early_departure:  ['illness', 'other'],
   absence:          ['illness', 'family', 'personal', 'weather_transport', 'other'],
   other_request:    [],
   chokko:           ['client_meeting', 'different_office', 'work_event', 'other'],
@@ -58,6 +58,7 @@ interface FormState {
   adminMessage: string;
   file: File | null;
   fileError: string;
+  trainLineName: string;
 }
 
 export function RequestFormPage() {
@@ -81,6 +82,7 @@ export function RequestFormPage() {
     adminMessage: '',
     file: null,
     fileError: '',
+    trainLineName: '',
   });
 
   function set<K extends keyof FormState>(key: K, value: FormState[K]) {
@@ -88,7 +90,7 @@ export function RequestFormPage() {
   }
 
   function handleTypeChange(type: RequestType) {
-    setForm(prev => ({ ...prev, requestType: type, reasonCategory: '', reasonDetail: '', leaveType: '', endDate: '' }));
+    setForm(prev => ({ ...prev, requestType: type, reasonCategory: '', reasonDetail: '', leaveType: '', endDate: '', trainLineName: '' }));
   }
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -104,6 +106,7 @@ export function RequestFormPage() {
   const reasons = REASONS_BY_TYPE[form.requestType];
   const showTime = TIME_TYPES.includes(form.requestType);
   const showDetail = form.reasonCategory !== '' && NEEDS_DETAIL.includes(form.reasonCategory as ReasonCategory);
+  const showTrainLinePicker = form.requestType === 'late' && form.reasonCategory === 'train_delay';
   const showLeaveType = form.requestType === 'absence';
   const showEndDate = form.requestType === 'absence';
   const isOtherRequest = form.requestType === 'other_request';
@@ -120,7 +123,8 @@ export function RequestFormPage() {
       : form.reasonCategory !== '' &&
         (!showLeaveType || form.leaveType !== '') &&
         (!showDetail || form.reasonDetail.trim() !== '') &&
-        (!showEndDate || form.endDate !== '');
+        (!showEndDate || form.endDate !== '') &&
+        (!showTrainLinePicker || form.trainLineName !== '');
 
   function handleNext() {
     if (!isValid || !user) return;
@@ -192,7 +196,10 @@ export function RequestFormPage() {
           {reasons.length > 0 && (
             <div>
               <Label htmlFor="reasonCategory" required={reasonRequired}>{t('form.reason')}</Label>
-              <select id="reasonCategory" value={form.reasonCategory} onChange={e => set('reasonCategory', e.target.value as ReasonCategory)} style={inputStyle}>
+              <select id="reasonCategory" value={form.reasonCategory} onChange={e => {
+                const cat = e.target.value as ReasonCategory;
+                setForm(prev => ({ ...prev, reasonCategory: cat, trainLineName: '' }));
+              }} style={inputStyle}>
                 <option value="">--</option>
                 {reasons.map(r => (
                   <option key={r} value={r}>{t(`form.reasons.${r}`)}</option>
@@ -211,6 +218,32 @@ export function RequestFormPage() {
                 rows={3} placeholder={detailPlaceholder}
                 style={{ ...inputStyle, resize: 'vertical' }}
               />
+            </div>
+          )}
+
+          {/* Train line picker — shown for late arrival with train_delay reason */}
+          {showTrainLinePicker && (
+            <div>
+              <Label htmlFor="trainLine" required>{t('form.train_line')}</Label>
+              {user?.trainLines && user.trainLines.length > 0 ? (
+                <select
+                  id="trainLine"
+                  value={form.trainLineName}
+                  onChange={e => set('trainLineName', e.target.value)}
+                  style={inputStyle}
+                >
+                  <option value="">--</option>
+                  {user.trainLines.map(line => (
+                    <option key={line.id} value={line.line_name_ja}>
+                      {isJa ? line.line_name_ja : line.line_name_en}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <p style={{ fontSize: '0.85em', color: '#6b7280', margin: 0 }}>
+                  {isJa ? '登録済みの路線がありません。' : 'No registered train lines.'}
+                </p>
+              )}
             </div>
           )}
 

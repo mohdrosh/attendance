@@ -69,7 +69,9 @@
       "client_meeting": "顧客先打ち合わせ",
       "different_office": "他オフィスへの出勤",
       "work_event": "業務関連イベント",
-      "substitute_day": "振替出勤"
+      "substitute_day": "振替出勤",
+      "train_delay": "電車遅延",
+      "oversleeping": "寝坊"
     },
     "leave_types": {
       "paid": "有給",

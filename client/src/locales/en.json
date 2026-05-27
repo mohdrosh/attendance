@@ -69,7 +69,9 @@
       "client_meeting": "Client Meeting",
       "different_office": "Going to a Different Office",
       "work_event": "Work-Related Event",
-      "substitute_day": "Substitute Working Day"
+      "substitute_day": "Substitute Working Day",
+      "train_delay": "Train Delay",
+      "oversleeping": "Oversleeping"
     },
     "leave_types": {
       "paid": "Paid",
