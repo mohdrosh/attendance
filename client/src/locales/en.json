@@ -161,6 +161,7 @@
       "role": "Role",
       "work_start": "Work Start",
       "work_end": "Work End",
+      "dispatch_company": "Dispatch Company",
       "managers": "Managers"
     },
     "actions": {

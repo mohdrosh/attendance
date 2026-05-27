@@ -24,10 +24,11 @@ interface FormState {
   role: string;
   work_start: string;
   work_end: string;
+  dispatch_company: string;
 }
 
 function emptyForm(): FormState {
-  return { employee_number: '', name_ja: '', name_en: '', email: '', role: 'applicant', work_start: '', work_end: '' };
+  return { employee_number: '', name_ja: '', name_en: '', email: '', role: 'applicant', work_start: '', work_end: '', dispatch_company: '' };
 }
 
 function employeeToForm(e: EmployeeDetail): FormState {
@@ -39,6 +40,7 @@ function employeeToForm(e: EmployeeDetail): FormState {
     role: e.role,
     work_start: e.work_start ?? '',
     work_end: e.work_end ?? '',
+    dispatch_company: e.dispatch_company ?? '',
   };
 }
 
@@ -96,6 +98,7 @@ export function EmployeeDetailPanel({ mode, employeeId, allUsers, onClose, onCre
           role: form.role,
           work_start: form.work_start || null,
           work_end: form.work_end || null,
+          dispatch_company: form.dispatch_company || null,
         }),
       });
       if (!res.ok) return;
@@ -279,6 +282,7 @@ export function EmployeeDetailPanel({ mode, employeeId, allUsers, onClose, onCre
                 <>
                   <FieldInput label={t('employees.fields.work_start')} value={form.work_start} onChange={v => setForm(f => ({ ...f, work_start: v }))} type="time" />
                   <FieldInput label={t('employees.fields.work_end')} value={form.work_end} onChange={v => setForm(f => ({ ...f, work_end: v }))} type="time" />
+                  <FieldInput label={t('employees.fields.dispatch_company')} value={form.dispatch_company} onChange={v => setForm(f => ({ ...f, dispatch_company: v }))} />
 
                   {/* Managers section */}
                   <div>
