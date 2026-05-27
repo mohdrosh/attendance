@@ -33,7 +33,7 @@ export async function createEmployee(data: CreateEmployeeData): Promise<string> 
 
 export async function listEmployees() {
   const { rows } = await pool.query(
-    `SELECT id, employee_number, name_ja, name_en, email, role, is_active
+    `SELECT id, employee_number, name_ja, name_en, email, role, is_active, dispatch_company
      FROM users ORDER BY name_ja`
   );
   return rows;
@@ -42,7 +42,7 @@ export async function listEmployees() {
 export async function getEmployeeById(id: string) {
   const { rows } = await pool.query(
     `SELECT u.id, u.employee_number, u.name_ja, u.name_en, u.email, u.role,
-            u.is_active, u.work_start, u.work_end,
+            u.is_active, u.work_start, u.work_end, u.dispatch_company,
             COALESCE(
               (
                 SELECT json_agg(json_build_object(
@@ -71,7 +71,7 @@ export async function getEmployeeById(id: string) {
   return rows[0] as Record<string, unknown> | undefined;
 }
 
-const ALLOWED_COLUMNS = new Set(['employee_number', 'name_ja', 'name_en', 'email', 'role', 'work_start', 'work_end']);
+const ALLOWED_COLUMNS = new Set(['employee_number', 'name_ja', 'name_en', 'email', 'role', 'work_start', 'work_end', 'dispatch_company']);
 
 export async function updateEmployee(id: string, data: UpdateEmployeeData): Promise<boolean> {
   const entries = Object.entries(data).filter(([k, v]) => ALLOWED_COLUMNS.has(k) && v !== undefined);
