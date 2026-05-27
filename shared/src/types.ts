@@ -24,6 +24,7 @@ export interface UserProfile {
   name_en: string;
   email: string;
   role: UserRole;
+  dispatch_company: string | null;
   trainLines: TrainLine[];
 }
 

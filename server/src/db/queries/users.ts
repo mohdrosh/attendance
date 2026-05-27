@@ -3,7 +3,7 @@ import { UserRole, TrainLine, UserProfile } from '@attendance/shared';
 
 export async function findUserByEmployeeNumber(employeeNumber: string) {
   const { rows } = await pool.query(
-    `SELECT id, employee_number, name_ja, name_en, email, password_hash, role, is_active
+    `SELECT id, employee_number, name_ja, name_en, email, password_hash, role, is_active, dispatch_company
      FROM users WHERE employee_number = $1`,
     [employeeNumber]
   );
@@ -16,12 +16,13 @@ export async function findUserByEmployeeNumber(employeeNumber: string) {
     password_hash: string;
     role: UserRole;
     is_active: boolean;
+    dispatch_company: string | null;
   } | undefined;
 }
 
 export async function getUserWithTrainLines(userId: string): Promise<UserProfile | undefined> {
   const { rows } = await pool.query(
-    `SELECT u.id, u.employee_number, u.name_ja, u.name_en, u.email, u.role,
+    `SELECT u.id, u.employee_number, u.name_ja, u.name_en, u.email, u.role, u.dispatch_company,
             COALESCE(
               json_agg(json_build_object('id', t.id, 'line_name_ja', t.line_name_ja, 'line_name_en', t.line_name_en))
               FILTER (WHERE t.id IS NOT NULL), '[]'
@@ -41,6 +42,7 @@ export async function getUserWithTrainLines(userId: string): Promise<UserProfile
     name_en: row.name_en,
     email: row.email,
     role: row.role,
+    dispatch_company: row.dispatch_company as string | null,
     trainLines: row.train_lines as TrainLine[],
   };
 }
