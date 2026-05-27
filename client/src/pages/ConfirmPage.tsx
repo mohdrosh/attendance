@@ -28,7 +28,7 @@ export function ConfirmPage() {
     requestType: form.requestType,
     reasonCategory: form.reasonCategory,
     reasonDetail: form.reasonDetail || undefined,
-    trainLineName: undefined,
+    trainLineName: form.trainLineName || undefined,
     startDate: form.startDate,
     endDate: form.endDate || undefined,
     timeFrom: form.timeFrom || undefined,
@@ -52,7 +52,9 @@ export function ConfirmPage() {
           timeFrom: form.timeFrom || undefined,
           timeTo: form.timeTo || undefined,
           reasonCategory: form.reasonCategory || undefined,
-          reasonDetail: form.reasonDetail || undefined,
+          reasonDetail: form.reasonCategory === 'train_delay'
+            ? (form.trainLineName || undefined)
+            : (form.reasonDetail || undefined),
           leaveType: form.leaveType || undefined,
           adminMessage: form.adminMessage || undefined,
         }),
@@ -81,7 +83,10 @@ export function ConfirmPage() {
       if (form.timeFrom) formData.append('timeFrom', form.timeFrom);
       if (form.timeTo) formData.append('timeTo', form.timeTo);
       if (form.reasonCategory) formData.append('reasonCategory', form.reasonCategory);
-      if (form.reasonDetail) formData.append('reasonDetail', form.reasonDetail);
+      const effectiveReasonDetail = form.reasonCategory === 'train_delay'
+        ? form.trainLineName
+        : form.reasonDetail;
+      if (effectiveReasonDetail) formData.append('reasonDetail', effectiveReasonDetail);
       if (form.leaveType) formData.append('leaveType', form.leaveType);
       if (form.adminMessage) formData.append('adminMessage', form.adminMessage);
       formData.append('inputLanguage', form.inputLanguage);
@@ -131,6 +136,7 @@ export function ConfirmPage() {
             <dt style={{ color: '#9ca3af', fontWeight: 600 }}>{t('form.date')}</dt><dd style={{ color: '#111' }}>{form.startDate}{form.endDate ? ` – ${form.endDate}` : ''}</dd>
             {form.reasonCategory && <><dt style={{ color: '#9ca3af', fontWeight: 600 }}>{t('form.reason')}</dt><dd style={{ color: '#111' }}>{t(`form.reasons.${form.reasonCategory}`)}</dd></>}
             {form.reasonDetail && <><dt style={{ color: '#9ca3af', fontWeight: 600 }}>{t('form.reason_detail')}</dt><dd style={{ color: '#111' }}>{form.reasonDetail}</dd></>}
+            {form.trainLineName && <><dt style={{ color: '#9ca3af', fontWeight: 600 }}>{t('form.train_line')}</dt><dd style={{ color: '#111' }}>{form.trainLineName}</dd></>}
             {form.leaveType && <><dt style={{ color: '#9ca3af', fontWeight: 600 }}>{t('form.leave_type')}</dt><dd style={{ color: '#111' }}>{t(`form.leave_types.${form.leaveType}`)}</dd></>}
             {form.adminMessage && <><dt style={{ color: '#9ca3af', fontWeight: 600 }}>{t('detail_panel.admin_message')}</dt><dd style={{ color: '#111' }}>{form.adminMessage}</dd></>}
             {todoke

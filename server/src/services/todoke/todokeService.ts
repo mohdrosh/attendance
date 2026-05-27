@@ -59,6 +59,14 @@ function buildReasonText(input: TodokeInput): string {
   }
 
   // late, early_departure, absence
+  if (reasonCategory === 'train_delay') {
+    return reasonDetail ? `${reasonDetail}の遅延のため。` : '電車遅延のため。';
+  }
+
+  if (reasonCategory === 'oversleeping') {
+    return '寝坊のため。';
+  }
+
   let base = REASON_LABEL[reasonCategory] ?? '';
   if (reasonCategory === 'other') {
     base = reasonDetail;
