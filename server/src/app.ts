@@ -11,6 +11,7 @@ import { requestRouter } from './routes/requests';
 import { adminRouter } from './routes/admin';
 import { attachmentRouter } from './routes/attachments';
 import { employeesRouter } from './routes/employees';
+import { todokeRouter } from './routes/todoke';
 import { emailService } from './services/email/NodemailerService';
 import { config } from './config';
 
@@ -52,6 +53,7 @@ export function createApp() {
   app.use('/api/admin/employees', employeesRouter);
   app.use('/api/admin', adminRouter);
   app.use('/api/attachments', attachmentRouter);
+  app.use('/api/todoke', todokeRouter);
 
   if (isProd && fs.existsSync(clientDist)) {
     app.use(express.static(clientDist));
