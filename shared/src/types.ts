@@ -5,7 +5,8 @@ export type RequestType =
 
 export type ReasonCategory =
   | 'illness' | 'family' | 'personal' | 'weather_transport' | 'other'
-  | 'client_meeting' | 'different_office' | 'work_event' | 'substitute_day';
+  | 'client_meeting' | 'different_office' | 'work_event' | 'substitute_day'
+  | 'train_delay' | 'oversleeping';
 
 export type LeaveType = 'paid' | 'unpaid' | 'substitute' | 'special';
 export type RequestStatus = 'pending' | 'approved' | 'rejected';

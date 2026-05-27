@@ -49,6 +49,10 @@ function reasonBodyJa(input: MessageInput): string {
       return '業務関連イベントのため';
     case 'substitute_day':
       return '振替出勤のため';
+    case 'train_delay':
+      return `${input.trainLineName ? input.trainLineName + 'の遅延' : '電車遅延'}のため`;
+    case 'oversleeping':
+      return '寝坊のため';
     case 'other':
       return `${input.reasonDetail ?? 'その他の理由'}のため`;
     default:
@@ -75,6 +79,10 @@ function reasonBodyEn(input: MessageInput): string {
       return 'a work-related event';
     case 'substitute_day':
       return 'a substitute working day';
+    case 'train_delay':
+      return input.trainLineName ? `train delay on ${input.trainLineName}` : 'train delay';
+    case 'oversleeping':
+      return 'oversleeping';
     case 'other':
       return input.reasonDetail ?? 'other reasons';
     default:
