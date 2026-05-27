@@ -141,6 +141,16 @@
   "toast": {
     "request_sent": "Request submitted successfully."
   },
+  "todoke": {
+    "section_title": "Todoke 届 (Optional)",
+    "description": "Generate the official 届 form pre-filled with your request details.",
+    "generate": "Generate & Attach 届",
+    "generating": "Generating…",
+    "attached": "届 Attached ✓",
+    "attached_message": "届 generated and attached to this request.",
+    "download": "Download 届",
+    "remove": "Remove"
+  },
   "employees": {
     "title": "Employee Management",
     "add": "Add Employee",

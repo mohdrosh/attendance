@@ -14,6 +14,8 @@ export function ConfirmPage() {
 
   const [sending, setSending] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [todoke, setTodoke] = useState<{ blob: Blob; filename: string } | null>(null);
+  const [todokeLoading, setTodokeLoading] = useState(false);
 
   if (!form || !user) {
     navigate('/request/new');
@@ -35,6 +37,36 @@ export function ConfirmPage() {
     inputLanguage: form.inputLanguage,
   });
 
+  async function handleGenerateTodoke() {
+    setTodokeLoading(true);
+    try {
+      const res = await apiFetch('/api/todoke/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          requestType: form.requestType,
+          startDate: form.startDate,
+          endDate: form.endDate || undefined,
+          timeFrom: form.timeFrom || undefined,
+          timeTo: form.timeTo || undefined,
+          reasonCategory: form.reasonCategory || undefined,
+          reasonDetail: form.reasonDetail || undefined,
+          leaveType: form.leaveType || undefined,
+          adminMessage: form.adminMessage || undefined,
+        }),
+      });
+      if (res.ok) {
+        const blob = await res.blob();
+        const disposition = res.headers.get('Content-Disposition') ?? '';
+        const match = disposition.match(/filename="([^"]+)"/);
+        const filename = match ? match[1] : 'todoke.xlsx';
+        setTodoke({ blob, filename });
+      }
+    } finally {
+      setTodokeLoading(false);
+    }
+  }
+
   async function handleSend() {
     setSending(true);
     try {
@@ -49,7 +81,11 @@ export function ConfirmPage() {
       if (form.leaveType) formData.append('leaveType', form.leaveType);
       if (form.adminMessage) formData.append('adminMessage', form.adminMessage);
       formData.append('inputLanguage', form.inputLanguage);
-      if (form.file) formData.append('file', form.file);
+      if (todoke) {
+        formData.append('file', todoke.blob, todoke.filename);
+      } else if (form.file) {
+        formData.append('file', form.file);
+      }
 
       const res = await apiFetch('/api/requests', { method: 'POST', body: formData });
       if (!res.ok) throw new Error('Failed to submit');
@@ -110,6 +146,46 @@ export function ConfirmPage() {
             <pre style={{ whiteSpace: 'pre-wrap', fontFamily: 'inherit', fontSize: '0.88em', color: '#374151', background: '#f8fafc', padding: '12px', borderRadius: '8px', margin: 0 }}>{japanese}</pre>
           </div>
         </section>
+
+        {todoke === null ? (
+          <section style={{ border: '2px solid #fb923c', background: 'white', borderRadius: '12px', padding: '20px', marginBottom: '16px' }}>
+            <h2 style={{ fontSize: '0.95em', fontWeight: 700, color: '#374151', marginBottom: '14px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('todoke.section_title')}</h2>
+            <p style={{ fontSize: '0.88em', color: '#6b7280', marginBottom: '14px' }}>{t('todoke.description')}</p>
+            <button
+              onClick={handleGenerateTodoke}
+              disabled={todokeLoading}
+              style={{ background: '#fb923c', color: 'white', border: 'none', borderRadius: '8px', padding: '10px 20px', cursor: todokeLoading ? 'not-allowed' : 'pointer', fontWeight: 600, fontSize: '0.9em' }}
+            >
+              {t(todokeLoading ? 'todoke.generating' : 'todoke.generate')}
+            </button>
+          </section>
+        ) : (
+          <section style={{ border: '2px solid #4ade80', background: '#f0fdf4', borderRadius: '12px', padding: '20px', marginBottom: '16px' }}>
+            <h2 style={{ fontSize: '0.95em', fontWeight: 700, color: '#374151', marginBottom: '14px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('todoke.attached')}</h2>
+            <p style={{ fontSize: '0.88em', color: '#6b7280', marginBottom: '14px' }}>{t('todoke.attached_message')}</p>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button
+                onClick={() => {
+                  const url = URL.createObjectURL(todoke.blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = todoke.filename;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                }}
+                style={{ background: '#3b82f6', color: 'white', border: 'none', borderRadius: '8px', padding: '10px 20px', cursor: 'pointer', fontWeight: 600, fontSize: '0.9em' }}
+              >
+                {t('todoke.download')}
+              </button>
+              <button
+                onClick={() => setTodoke(null)}
+                style={{ background: 'white', border: '1px solid #d1d5db', color: '#374151', borderRadius: '8px', padding: '10px 20px', cursor: 'pointer', fontWeight: 600, fontSize: '0.9em' }}
+              >
+                {t('todoke.remove')}
+              </button>
+            </div>
+          </section>
+        )}
 
         <div style={{ display: 'flex', gap: '12px' }}>
           <button

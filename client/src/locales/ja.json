@@ -141,6 +141,16 @@
   "toast": {
     "request_sent": "申請を送信しました。"
   },
+  "todoke": {
+    "section_title": "届（任意）",
+    "description": "申請内容をもとに届を自動生成します。",
+    "generate": "届を生成・添付",
+    "generating": "生成中…",
+    "attached": "届 添付済み ✓",
+    "attached_message": "届が生成され、申請に添付されました。",
+    "download": "届をダウンロード",
+    "remove": "削除"
+  },
   "employees": {
     "title": "社員管理",
     "add": "社員を追加",
