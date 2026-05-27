@@ -103,7 +103,10 @@ export function RequestFormPage() {
     setForm(prev => ({ ...prev, file, fileError: '' }));
   }
 
-  const reasons = REASONS_BY_TYPE[form.requestType];
+  const hasTrainLines = (user?.trainLines?.length ?? 0) > 0;
+  const reasons = REASONS_BY_TYPE[form.requestType].filter(
+    r => r !== 'train_delay' || hasTrainLines
+  );
   const showTime = TIME_TYPES.includes(form.requestType);
   const showDetail = form.reasonCategory !== '' && NEEDS_DETAIL.includes(form.reasonCategory as ReasonCategory);
   const showTrainLinePicker = form.requestType === 'late' && form.reasonCategory === 'train_delay';
