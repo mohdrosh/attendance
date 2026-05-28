@@ -1,6 +1,6 @@
 import path from 'path';
 import ExcelJS from 'exceljs';
-import { generateHankoPng } from './hankoService';
+// import { generateHankoPng } from './hankoService'; // hanko disabled
 
 const TEMPLATE_PATH = path.join(__dirname, '../../assets/todoke_template.xlsx');
 
@@ -177,15 +177,6 @@ export async function generateTodoke(input: TodokeInput): Promise<Buffer> {
   // ── Reason text ────────────────────────────────────────────────────────────
   ws.getCell('F28').value = buildReasonText(input);
 
-  // ── Embed hanko ────────────────────────────────────────────────────────────
-  const hankoPng = await generateHankoPng(input.employeeNameJa);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const imageId = workbook.addImage({ buffer: hankoPng as any, extension: 'png' }); // cast needed: ExcelJS types expect node Buffer, but @resvg/resvg-js returns Buffer<ArrayBufferLike>
-  ws.addImage(imageId, {
-    tl: { col: 31, row: 8 },
-    br: { col: 34, row: 11 },
-    editAs: 'oneCell',
-  } as any);
 
   // ── Return buffer ──────────────────────────────────────────────────────────
   const buf = await workbook.xlsx.writeBuffer();
