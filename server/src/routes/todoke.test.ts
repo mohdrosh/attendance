@@ -18,8 +18,8 @@ beforeEach(async () => {
     [hash]
   );
   await pool.query(
-    `INSERT INTO users (employee_number, name_ja, name_en, email, password_hash, role)
-     VALUES ('2407032', 'テスト太郎', 'Test Taro', 'emp@test.com', $1, 'applicant')`,
+    `INSERT INTO users (employee_number, name_ja, name_en, email, password_hash, role, dispatch_company)
+     VALUES ('2407032', 'テスト太郎', 'Test Taro', 'emp@test.com', $1, 'applicant', 'テスト株式会社')`,
     [hash]
   );
 

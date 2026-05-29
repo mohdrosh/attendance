@@ -62,8 +62,9 @@ export function ConfirmPage() {
       if (res.ok) {
         const blob = await res.blob();
         const disposition = res.headers.get('Content-Disposition') ?? '';
-        const match = disposition.match(/filename="([^"]+)"/);
-        const filename = match ? match[1] : 'todoke.xlsx';
+        const utf8Match = disposition.match(/filename\*=UTF-8''([^;]+)/i);
+        const asciiMatch = disposition.match(/filename="([^"]+)"/);
+        const filename = utf8Match ? decodeURIComponent(utf8Match[1]) : (asciiMatch ? asciiMatch[1] : 'todoke.xlsx');
         setTodoke({ blob, filename });
       } else {
         showToast('Failed to generate todoke. Please try again.');

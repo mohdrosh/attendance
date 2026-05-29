@@ -29,6 +29,10 @@ todokeRouter.post('/generate', async (req: AuthRequest, res: Response, next) => 
       return res.status(404).json({ error: 'User not found' });
     }
 
+    if (!user.dispatch_company || !user.employee_number || !user.name_ja) {
+      return res.status(400).json({ error: 'dispatch_company, employee_number, and name are required to generate a todoke' });
+    }
+
     const buf = await generateTodoke({
       requestType: requestType ?? '',
       startDate: startDate ?? '',
@@ -44,9 +48,11 @@ todokeRouter.post('/generate', async (req: AuthRequest, res: Response, next) => 
       dispatchCompany: user.dispatch_company ?? '',
     });
 
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toISOString().split('T')[0].replace(/-/g, '');
+    const rawFilename = `${user.name_ja}_${today}_C-2 届・設計開発（雛型）２４０９０９.xlsx`;
+    const encodedFilename = encodeURIComponent(rawFilename);
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    res.setHeader('Content-Disposition', `attachment; filename="todoke_${today}.xlsx"`);
+    res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${encodedFilename}`);
     res.send(buf);
   } catch (err) { next(err); }
 });
