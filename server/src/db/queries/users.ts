@@ -72,3 +72,16 @@ export async function getManagersByEmployeeId(employeeId: string) {
   );
   return rows as { id: string; employee_number: string; name_ja: string; name_en: string; email: string }[];
 }
+
+export async function findUserByEmployeeNumberAndEmail(employeeNumber: string, email: string) {
+  const { rows } = await pool.query(
+    `SELECT id FROM users WHERE employee_number = $1 AND LOWER(email) = LOWER($2)`,
+    [employeeNumber, email]
+  );
+  return rows[0] as { id: string } | undefined;
+}
+
+export async function updateUserPassword(userId: string, passwordHash: string) {
+  await pool.query(`UPDATE users SET password_hash = $1 WHERE id = $2`, [passwordHash, userId]);
+  await pool.query(`DELETE FROM refresh_tokens WHERE user_id = $1`, [userId]);
+}

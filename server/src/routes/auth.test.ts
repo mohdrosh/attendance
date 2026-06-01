@@ -105,3 +105,49 @@ describe('POST /api/auth/login — deactivated account', () => {
     expect(res.body.error).toBe('account_deactivated');
   });
 });
+
+describe('POST /api/auth/forgot-password', () => {
+  const MSG = 'If the details match, a new password has been sent.';
+
+  it('returns 200 with standard message when employee_number + email match', async () => {
+    const res = await request(app)
+      .post('/api/auth/forgot-password')
+      .send({ employee_number: 'EMP-001', email: 'test@company.com' });
+    expect(res.status).toBe(200);
+    expect(res.body.message).toBe(MSG);
+  });
+
+  it('returns 200 with standard message when email does not match', async () => {
+    const res = await request(app)
+      .post('/api/auth/forgot-password')
+      .send({ employee_number: 'EMP-001', email: 'wrong@example.com' });
+    expect(res.status).toBe(200);
+    expect(res.body.message).toBe(MSG);
+  });
+
+  it('returns 200 with standard message for unknown employee number', async () => {
+    const res = await request(app)
+      .post('/api/auth/forgot-password')
+      .send({ employee_number: 'NOBODY', email: 'any@example.com' });
+    expect(res.status).toBe(200);
+    expect(res.body.message).toBe(MSG);
+  });
+
+  it('returns 400 when employee_number is missing', async () => {
+    const res = await request(app)
+      .post('/api/auth/forgot-password')
+      .send({ email: 'test@company.com' });
+    expect(res.status).toBe(400);
+  });
+
+  it('changes the password so the old password no longer works after a match', async () => {
+    await request(app)
+      .post('/api/auth/forgot-password')
+      .send({ employee_number: 'EMP-001', email: 'test@company.com' });
+
+    const loginRes = await request(app)
+      .post('/api/auth/login')
+      .send({ employee_number: 'EMP-001', password: 'Test1234!' });
+    expect(loginRes.status).toBe(401);
+  });
+});

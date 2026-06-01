@@ -1,10 +1,11 @@
 import { Router, Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import crypto from 'crypto';
+import crypto, { randomInt } from 'crypto';
 import { config } from '../config';
-import { findUserByEmployeeNumber, getUserWithTrainLines, saveRefreshToken, findAndDeleteRefreshToken } from '../db/queries/users';
+import { findUserByEmployeeNumber, getUserWithTrainLines, saveRefreshToken, findAndDeleteRefreshToken, findUserByEmployeeNumberAndEmail, updateUserPassword } from '../db/queries/users';
 import { AppError } from '../middleware/errorHandler';
+import { emailService } from '../services/email/NodemailerService';
 
 export const authRouter = Router();
 
@@ -85,5 +86,35 @@ authRouter.post('/logout', async (req: Request, res: Response, next) => {
     }
     res.clearCookie('refreshToken');
     res.json({ ok: true });
+  } catch (err) { next(err); }
+});
+
+authRouter.post('/forgot-password', async (req: Request, res: Response, next) => {
+  try {
+    const { employee_number, email } = req.body;
+    if (!employee_number || !email) throw new AppError(400, 'employee_number and email required');
+
+    const MSG = 'If the details match, a new password has been sent.';
+
+    const user = await findUserByEmployeeNumberAndEmail(employee_number, email);
+    if (user) {
+      const upper  = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+      const lower  = 'abcdefghjkmnpqrstuvwxyz';
+      const digits = '23456789';
+      const pick = (s: string) => s[randomInt(0, s.length)];
+      const newPassword = pick(upper) + pick(lower) + pick(lower) + pick(lower)
+                        + pick(digits) + pick(digits) + pick(digits) + pick(digits) + '!';
+
+      const hash = await bcrypt.hash(newPassword, 12);
+      await updateUserPassword(user.id, hash);
+
+      emailService.send({
+        to: [email],
+        subject: 'Attendance System — Password Reset',
+        body: `Your password has been reset.\n\nNew password: ${newPassword}\n\nPlease log in and store this password safely.`,
+      }).catch((err: unknown) => console.error('Password reset email failed:', err));
+    }
+
+    res.json({ message: MSG });
   } catch (err) { next(err); }
 });
