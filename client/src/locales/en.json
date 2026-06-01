@@ -5,7 +5,14 @@
     "employee_number": "Employee Number",
     "password": "Password",
     "submit": "Login",
-    "error": "Invalid employee number or password"
+    "error": "Invalid employee number or password",
+    "forgot_password": "Forgot password?",
+    "reset_title": "Reset Password",
+    "reset_email": "Email Address",
+    "reset_submit": "Send Reset Email",
+    "reset_submitting": "Sending…",
+    "reset_back": "Back to Login",
+    "reset_sent": "If the details match, a new password has been sent to your email."
   },
   "nav": {
     "brand": "Attendance System",

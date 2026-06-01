@@ -5,7 +5,14 @@
     "employee_number": "社員番号",
     "password": "パスワード",
     "submit": "ログイン",
-    "error": "社員番号またはパスワードが正しくありません"
+    "error": "社員番号またはパスワードが正しくありません",
+    "forgot_password": "パスワードを忘れた方",
+    "reset_title": "パスワードリセット",
+    "reset_email": "メールアドレス",
+    "reset_submit": "リセットメールを送信",
+    "reset_submitting": "送信中…",
+    "reset_back": "ログインに戻る",
+    "reset_sent": "入力内容が一致した場合、新しいパスワードをメールで送信しました。"
   },
   "nav": {
     "brand": "勤怠申請",
