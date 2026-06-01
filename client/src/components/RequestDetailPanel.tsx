@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Request as AttendanceRequest } from '@attendance/shared';
 import { apiFetch } from '../api/client';
+import { AttachmentPreviewModal } from './AttachmentPreviewModal';
+import { useToast } from '../context/ToastContext';
 
 interface Props {
   request: AttendanceRequest | null;
@@ -13,8 +15,11 @@ interface Props {
 
 export function RequestDetailPanel({ request, onClose, onRead, onUnread, onDelete }: Props) {
   const { t } = useTranslation();
+  const { showToast } = useToast();
   const [isRead, setIsRead] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewBlob, setPreviewBlob] = useState<{ blob: Blob; mimeType: string; filename: string } | null>(null);
 
   useEffect(() => {
     if (!request) return;
@@ -53,6 +58,31 @@ export function RequestDetailPanel({ request, onClose, onRead, onUnread, onDelet
     if (!res.ok) return;
     onDelete(request.id);
     onClose();
+  }
+
+  function getMimeFromFilename(name: string): string {
+    return name.toLowerCase().endsWith('.pdf')
+      ? 'application/pdf'
+      : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+  }
+
+  async function handlePreview() {
+    if (!request?.attachment) return;
+    setPreviewLoading(true);
+    try {
+      const res = await apiFetch(`/api/attachments/${request.attachment.id}`);
+      if (!res.ok) { showToast(t('preview.load_error')); return; }
+      const blob = await res.blob();
+      setPreviewBlob({
+        blob,
+        mimeType: getMimeFromFilename(request.attachment.original_filename),
+        filename: request.attachment.original_filename,
+      });
+    } catch {
+      showToast(t('preview.load_error'));
+    } finally {
+      setPreviewLoading(false);
+    }
   }
 
   return (
@@ -103,16 +133,36 @@ export function RequestDetailPanel({ request, onClose, onRead, onUnread, onDelet
           </div>
 
           {request.attachment && (
-            <div style={{ marginTop: '20px', padding: '12px 14px', background: '#f8fafc', border: '1px solid #e5e7eb', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '1.2em' }}>📎</span>
-              <a
-                href={`/api/attachments/${request.attachment.id}`}
-                download={request.attachment.original_filename}
-                style={{ color: '#1d4ed8', fontSize: '0.9em', textDecoration: 'none' }}
-              >
-                {request.attachment.original_filename}
-              </a>
+            <div style={{ marginTop: '20px', padding: '12px 14px', background: '#f8fafc', border: '1px solid #e5e7eb', borderRadius: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                <span style={{ fontSize: '1.2em' }}>📎</span>
+                <span style={{ color: '#374151', fontSize: '0.9em' }}>{request.attachment.original_filename}</span>
+              </div>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button
+                  onClick={handlePreview}
+                  disabled={previewLoading}
+                  style={{ padding: '5px 12px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '6px', cursor: previewLoading ? 'not-allowed' : 'pointer', fontSize: '0.82em', fontWeight: 600 }}
+                >
+                  {previewLoading ? '…' : t('preview.button')}
+                </button>
+                <a
+                  href={`/api/attachments/${request.attachment.id}`}
+                  download={request.attachment.original_filename}
+                  style={{ padding: '5px 12px', background: '#f3f4f6', border: '1px solid #d1d5db', borderRadius: '6px', color: '#374151', fontSize: '0.82em', fontWeight: 600, textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}
+                >
+                  {t('preview.download')}
+                </a>
+              </div>
             </div>
+          )}
+          {previewBlob && (
+            <AttachmentPreviewModal
+              blob={previewBlob.blob}
+              mimeType={previewBlob.mimeType}
+              filename={previewBlob.filename}
+              onClose={() => setPreviewBlob(null)}
+            />
           )}
         </div>
 
