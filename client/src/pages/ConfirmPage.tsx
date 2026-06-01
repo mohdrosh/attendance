@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { generateMessage } from '@attendance/shared';
 import { Navbar } from '../components/Navbar';
 import { Footer } from '../components/Footer';
+import { AttachmentPreviewModal } from '../components/AttachmentPreviewModal';
 import { apiFetch } from '../api/client';
 import { useToast } from '../context/ToastContext';
 
@@ -18,6 +19,7 @@ export function ConfirmPage() {
   const [submitted, setSubmitted] = useState(false);
   const [todoke, setTodoke] = useState<{ blob: Blob; filename: string } | null>(null);
   const [todokeLoading, setTodokeLoading] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
 
   if (!form || !user) {
     navigate('/request/new');
@@ -179,6 +181,12 @@ export function ConfirmPage() {
             <p style={{ fontSize: '0.88em', color: '#6b7280', marginBottom: '14px' }}>{t('todoke.attached_message')}</p>
             <div style={{ display: 'flex', gap: '12px' }}>
               <button
+                onClick={() => setShowPreview(true)}
+                style={{ background: '#6366f1', color: 'white', border: 'none', borderRadius: '8px', padding: '10px 20px', cursor: 'pointer', fontWeight: 600, fontSize: '0.9em' }}
+              >
+                {t('preview.button')}
+              </button>
+              <button
                 onClick={() => {
                   const url = URL.createObjectURL(todoke.blob);
                   const a = document.createElement('a');
@@ -198,6 +206,14 @@ export function ConfirmPage() {
                 {t('todoke.remove')}
               </button>
             </div>
+            {showPreview && (
+              <AttachmentPreviewModal
+                blob={todoke.blob}
+                mimeType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                filename={todoke.filename}
+                onClose={() => setShowPreview(false)}
+              />
+            )}
           </section>
         )}
 
