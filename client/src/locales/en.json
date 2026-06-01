@@ -1,6 +1,7 @@
 {
   "login": {
     "title": "Attendance Request System",
+    "welcome": "Welcome to the Attendance Management System",
     "employee_number": "Employee Number",
     "password": "Password",
     "submit": "Login",

@@ -1,6 +1,7 @@
 {
   "login": {
     "title": "勤怠申請システム",
+    "welcome": "勤怠管理システムへようこそ",
     "employee_number": "社員番号",
     "password": "パスワード",
     "submit": "ログイン",
