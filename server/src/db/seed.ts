@@ -1,4 +1,5 @@
 import bcrypt from 'bcryptjs';
+import { randomInt } from 'crypto';
 import path from 'path';
 import ExcelJS from 'exceljs';
 import { pool } from './pool';
@@ -18,7 +19,7 @@ function generatePassword(): string {
   const upper  = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
   const lower  = 'abcdefghjkmnpqrstuvwxyz';
   const digits = '23456789';
-  const pick = (s: string) => s[Math.floor(Math.random() * s.length)];
+  const pick = (s: string) => s[randomInt(0, s.length)];
   return pick(upper) + pick(lower) + pick(lower) + pick(lower)
        + pick(digits) + pick(digits) + pick(digits) + pick(digits) + '!';
 }
