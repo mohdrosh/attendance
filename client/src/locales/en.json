@@ -212,5 +212,12 @@
       "manager_assigned": "Manager assigned",
       "manager_removed": "Manager removed"
     }
+  },
+  "preview": {
+    "button": "Preview",
+    "download": "Download",
+    "loading": "Loading preview…",
+    "unavailable": "Preview unavailable for this file.",
+    "load_error": "Failed to load preview. Please try again."
   }
 }

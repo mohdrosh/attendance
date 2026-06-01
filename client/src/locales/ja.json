@@ -212,5 +212,12 @@
       "manager_assigned": "上長を追加",
       "manager_removed": "上長を削除"
     }
+  },
+  "preview": {
+    "button": "プレビュー",
+    "download": "ダウンロード",
+    "loading": "読み込み中…",
+    "unavailable": "このファイルはプレビューできません。",
+    "load_error": "プレビューの読み込みに失敗しました。"
   }
 }
