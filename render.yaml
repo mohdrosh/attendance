@@ -2,6 +2,7 @@ services:
   - type: web
     name: attendance-system
     runtime: node
+    plan: free
     buildCommand: npm install && npm run build && node server/dist/db/migrate.js && node server/dist/db/seed.js
     startCommand: node server/dist/index.js
     envVars:
